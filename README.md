@@ -44,6 +44,8 @@ curl -F "file=@sample.pdf" http://127.0.0.1:8000/parse
 pytest
 ```
 
+The repository also enforces a `quality-gate` workflow with 100% source coverage and docstring audit coverage.
+
 ## Fixtures and provenance
 
 This repository ships only synthetic test fixtures and derived structural baselines. For fixture provenance and regeneration notes, see `tests/fixtures/README.md`.

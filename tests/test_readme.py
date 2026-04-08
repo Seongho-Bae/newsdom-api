@@ -26,3 +26,7 @@ def test_security_workflows_exist():
     assert Path(".github/workflows/scorecards.yml").exists()
     assert Path(".github/workflows/codeql.yml").exists()
     assert Path(".github/workflows/dependency-review.yml").exists()
+
+
+def test_quality_gate_workflow_exists():
+    assert Path(".github/workflows/quality-gate.yml").exists()

@@ -1,3 +1,5 @@
+"""Invoke MinerU as an external parser and collect its structured outputs."""
+
 from __future__ import annotations
 
 import json
@@ -12,6 +14,8 @@ from typing import Any
 def build_mineru_command(
     input_pdf: Path, output_dir: Path, mineru_bin: str = "mineru"
 ) -> list[str]:
+    """Build the MinerU CLI command for OCR pipeline execution."""
+
     return [
         mineru_bin,
         "-p",
@@ -28,6 +32,8 @@ def build_mineru_command(
 
 
 def _resolve_mineru_bin() -> str:
+    """Resolve the MinerU executable path from env override or PATH."""
+
     configured = os.environ.get("NEWSDOM_MINERU_BIN")
     if configured:
         return configured
@@ -35,6 +41,8 @@ def _resolve_mineru_bin() -> str:
 
 
 def _find_output_dir(base_output_dir: Path) -> Path:
+    """Locate the OCR output directory created by MinerU."""
+
     candidates = list(base_output_dir.glob("*/ocr"))
     if not candidates:
         raise FileNotFoundError(f"No MinerU OCR output found under {base_output_dir}")
@@ -42,6 +50,8 @@ def _find_output_dir(base_output_dir: Path) -> Path:
 
 
 def run_mineru(input_pdf: Path) -> dict[str, Any]:
+    """Run MinerU on a PDF and return parsed JSON artifacts plus raw process output."""
+
     mineru_bin = _resolve_mineru_bin()
     with tempfile.TemporaryDirectory(prefix="newsdom-mineru-") as tempdir:
         output_dir = Path(tempdir)

@@ -1,8 +1,9 @@
+"""Synthetic newspaper fixture generation for redistributable repository tests."""
+
 from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import Iterable
 
 from PIL import Image, ImageDraw, ImageFilter, ImageFont
 from reportlab.lib.utils import ImageReader
@@ -14,6 +15,8 @@ PAGE_HEIGHT = 2600
 
 
 def _font_candidates() -> list[str]:
+    """Return preferred macOS Japanese font candidates for fixture rendering."""
+
     return [
         "/System/Library/Fonts/ヒラギノ角ゴシック W3.ttc",
         "/System/Library/Fonts/ヒラギノ明朝 ProN.ttc",
@@ -22,6 +25,8 @@ def _font_candidates() -> list[str]:
 
 
 def _load_font(size: int) -> ImageFont.FreeTypeFont:
+    """Load the first available Japanese-capable font at the requested size."""
+
     for candidate in _font_candidates():
         if Path(candidate).exists():
             return ImageFont.truetype(candidate, size=size)
@@ -36,6 +41,8 @@ def _draw_vertical_text(
     font: ImageFont.ImageFont,
     line_height: int,
 ) -> None:
+    """Render a string as simple top-to-bottom vertical glyph placement."""
+
     cursor_y = y
     for char in text:
         draw.text((x, cursor_y), char, fill="black", font=font)
@@ -43,6 +50,8 @@ def _draw_vertical_text(
 
 
 def _split_vertical(text: str, max_chars: int) -> list[str]:
+    """Split text into vertical columns constrained by the page height budget."""
+
     return [text[idx : idx + max_chars] for idx in range(0, len(text), max_chars)]
 
 
@@ -52,6 +61,8 @@ def _draw_vertical_columns(
     text: str,
     font: ImageFont.ImageFont,
 ) -> None:
+    """Render multiple vertical columns of text inside the supplied bounding box."""
+
     x0, y0, x1, y1 = bbox
     font_size = int(getattr(font, "size", 24))
     line_height = int(font_size * 1.1)
@@ -69,6 +80,8 @@ def _draw_vertical_columns(
 def _article_block(
     headline: str, body: str, bbox: tuple[int, int, int, int], vertical: bool = True
 ) -> dict:
+    """Create one synthetic article descriptor for the fixture ground truth."""
+
     return {
         "headline": headline,
         "body": body,
@@ -78,6 +91,8 @@ def _article_block(
 
 
 def _ground_truth() -> dict:
+    """Return the deterministic article/image/ad structure used for the fixture."""
+
     return {
         "page_size": [PAGE_WIDTH, PAGE_HEIGHT],
         "column_count": 4,
@@ -121,6 +136,8 @@ def _ground_truth() -> dict:
 
 
 def generate_fixture(output_dir: Path, seed: int = 7) -> tuple[Path, Path]:
+    """Generate a synthetic scanned-newspaper PDF fixture and ground-truth JSON."""
+
     output_dir.mkdir(parents=True, exist_ok=True)
     image_path = output_dir / f"synthetic_newspaper_{seed}.png"
     pdf_path = output_dir / f"synthetic_newspaper_{seed}.pdf"
