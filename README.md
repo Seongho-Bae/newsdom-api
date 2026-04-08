@@ -52,6 +52,8 @@ This repository ships only synthetic test fixtures and derived structural baseli
 
 Development setup, fixture handling rules, and local-only baseline maintenance are documented in `CONTRIBUTING.md`.
 
+Security reporting guidance is documented in `SECURITY.md`.
+
 Repository branch workflow is documented in `docs/workflow/git-flow.md`.
 
 ## Repository layout

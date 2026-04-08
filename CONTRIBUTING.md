@@ -51,6 +51,7 @@ The source page must remain local.
 
 - `README.md`: user-facing overview and quickstart
 - `CONTRIBUTING.md`: maintainer workflow and safety rules
+- `SECURITY.md`: vulnerability reporting and supported-branch policy
 - `docs/workflow/git-flow.md`: canonical branch workflow
 - `tests/fixtures/README.md`: fixture provenance and regeneration notes
 - `docs/plans/`: design and implementation planning notes
