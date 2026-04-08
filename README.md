@@ -2,25 +2,15 @@
 
 NewsDOM API parses scanned Japanese newspaper PDFs into DOM-like article trees.
 
-## Primary parser
+## Features
 
 - Primary engine: `MinerU` pipeline backend
 - Service wrapper: FastAPI
 - Output: canonical JSON with pages, articles, headlines, body blocks, images, captions, and quality metadata
 
-## Copyright-safe testing
+## Quickstart
 
-This repository does **not** include the original copyrighted newspaper PDF used during local validation.
-
-Instead, it ships:
-
-- a fully **synthetic** newspaper-like PDF generator
-- a synthetic ground-truth JSON sidecar
-- an **equivalence** test against private-page-derived structural metrics only
-
-The committed baseline contains only non-expressive numeric layout metrics and no copyrighted text or imagery.
-
-## Install
+### Install
 
 ```bash
 python3.10 -m venv .venv
@@ -34,24 +24,34 @@ To enable real parsing with MinerU:
 pip install -e .[parser]
 ```
 
-## Run
+### Run
 
 ```bash
 uvicorn newsdom_api.main:app --reload
 ```
 
-## Tests
+### Parse a PDF
+
+```bash
+curl -F "file=@sample.pdf" http://127.0.0.1:8000/parse
+```
+
+### Run tests
 
 ```bash
 pytest
 ```
 
-## Local-only baseline derivation
+## Fixtures and provenance
 
-If you have a private reference page and want to refresh structural baselines locally:
+This repository ships only synthetic test fixtures and derived structural baselines. For fixture provenance and regeneration notes, see `tests/fixtures/README.md`.
 
-```bash
-python tools/derive_private_baseline.py tests/fixtures/private_page_baseline.json
-```
+## Development
 
-Do not commit copyrighted source PDFs or source-derived OCR text.
+Development setup, fixture handling rules, and local-only baseline maintenance are documented in `CONTRIBUTING.md`.
+
+## Repository layout
+
+- `src/newsdom_api/`: API, MinerU wrapper, DOM builder, synthetic fixture generator
+- `tests/`: unit tests and committed synthetic fixtures
+- `tools/`: local maintenance utilities
