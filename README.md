@@ -20,10 +20,10 @@ source .venv/bin/activate
 pip install -e .[dev]
 ```
 
-To enable real parsing with MinerU:
+To enable real parsing with MinerU, install the MinerU CLI separately in the environment that will execute parsing:
 
 ```bash
-pip install -e .[parser]
+pip install "mineru[pipeline]==3.0.9"
 ```
 
 ### Run

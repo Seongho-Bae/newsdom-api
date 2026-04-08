@@ -25,6 +25,18 @@ def test_ci_workflows_do_not_use_pip_install_commands():
         assert "pip install" not in text
 
 
+def test_ci_workflows_run_pytest_through_uv():
+    tests_text = Path(".github/workflows/tests.yml").read_text(encoding="utf-8")
+    quality_text = Path(".github/workflows/quality-gate.yml").read_text(
+        encoding="utf-8"
+    )
+    assert "uv run pytest" in tests_text
+    assert (
+        "uv run pytest --cov=src/newsdom_api --cov-report=term-missing --cov-fail-under=100"
+        in quality_text
+    )
+
+
 def test_uv_lock_exists_for_ci_reproducibility():
     assert Path("uv.lock").exists()
 

@@ -29,4 +29,4 @@ jobs:
       - name: Run tests with warnings as errors
         env:
           PYTHONWARNINGS: error
-        run: pytest
+        run: uv run pytest

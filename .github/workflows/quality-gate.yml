@@ -30,4 +30,4 @@ jobs:
       - name: Run quality gate
         env:
           PYTHONWARNINGS: error
-        run: pytest --cov=src/newsdom_api --cov-report=term-missing --cov-fail-under=100
+        run: uv run pytest --cov=src/newsdom_api --cov-report=term-missing --cov-fail-under=100

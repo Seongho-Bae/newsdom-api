@@ -11,7 +11,7 @@ pip install -e .[dev]
 Install the parser stack only when you need live MinerU execution:
 
 ```bash
-pip install -e .[parser]
+pip install "mineru[pipeline]==3.0.9"
 ```
 
 ## Test commands
