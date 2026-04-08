@@ -23,6 +23,7 @@ dependencies = [
 [project.optional-dependencies]
 dev = [
   "pytest>=8.3,<9.0",
+  "pytest-cov>=5.0,<7.0",
   "httpx>=0.28,<1.0"
 ]
 parser = [
@@ -40,3 +41,11 @@ testpaths = ["tests"]
 markers = [
   "integration: requires MinerU CLI and model cache"
 ]
+
+[tool.coverage.run]
+source = ["src/newsdom_api"]
+
+[tool.coverage.report]
+fail_under = 100
+show_missing = true
+skip_covered = false

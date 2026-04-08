@@ -19,6 +19,7 @@ pip install -e .[parser]
 ```bash
 pytest
 PYTHONWARNINGS=error pytest
+pytest --cov=src/newsdom_api --cov-report=term-missing --cov-fail-under=100
 ```
 
 ## Fixture policy
