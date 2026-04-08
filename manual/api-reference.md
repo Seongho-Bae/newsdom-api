@@ -1,0 +1,126 @@
+# 사용 방법 및 API 레퍼런스
+
+FastAPI 서버를 실행하고, 스캔된 신문 PDF를 업로드하여 기사 DOM 트리 형태의 Canonical JSON 데이터를 파싱하는 방법을 안내합니다.
+
+## 1. 서버 실행하기
+
+가상환경을 활성화한 상태에서, `uvicorn`을 이용하여 API 서버를 구동합니다.
+
+```bash
+# 개발 시 핫-리로딩(--reload) 모드 사용
+uvicorn newsdom_api.main:app --reload
+```
+
+## 2. 인터랙티브 웹 UI
+
+FastAPI는 OpenAPI 기반의 대화형 API 문서를 자동으로 생성합니다.
+웹 브라우저를 열고 다음 주소에 접속하면 시각적인 환경에서 바로 API를 테스트할 수 있습니다.
+
+- **Swagger UI**: `http://127.0.0.1:8000/docs`
+- **ReDoc**: `http://127.0.0.1:8000/redoc`
+
+해당 페이지에서 **`/parse`** 버튼을 클릭한 후, `Try it out` 기능을 통해 파일을 직접 첨부하고 테스트 결과를 볼 수 있습니다.
+
+---
+
+## 3. API 엔드포인트 설명
+
+### `POST /parse`
+
+스캔된 일본어 신문 PDF 문서를 업로드 받아, 기사 단위 DOM 구조가 담긴 JSON 형태로 변환합니다.
+
+#### 요청 매개변수 (Request Body)
+- **`file`** (`UploadFile`, 필수): 변환할 PDF 바이너리 파일 데이터 (`multipart/form-data`)
+
+#### cURL 테스트 예제
+
+```bash
+# 로컬 테스트 (sample.pdf를 /parse 엔드포인트로 전송)
+curl -X 'POST' \
+  'http://127.0.0.1:8000/parse' \
+  -H 'accept: application/json' \
+  -H 'Content-Type: multipart/form-data' \
+  -F 'file=@sample.pdf;type=application/pdf'
+```
+
+---
+
+### 응답(Response) JSON 스키마
+
+파싱 성공 시 반환되는 DOM 형태의 `ParseResponse` 객체 구조입니다.
+
+```json
+{
+  "document_id": "string (고유 문서 식별자)",
+  "pages": [
+    {
+      "page_number": 1,
+      "width": 800.5,
+      "height": 1200.0,
+      "articles": [
+        {
+          "article_id": "article_0",
+          "headline": "신문 헤드라인 제목",
+          "bbox": {
+            "x0": 10.0, "y0": 20.0, "x1": 400.0, "y1": 150.0
+          },
+          "body_blocks": [
+            "첫 번째 단락의 본문입니다.",
+            "두 번째 단락이 이어집니다."
+          ],
+          "images": [
+            {
+              "path": "extracted_images/page1_img1.jpg",
+              "bbox": { ... },
+              "captions": [
+                {
+                  "text": "사진 캡션 내용입니다.",
+                  "bbox": { ... }
+                }
+              ]
+            }
+          ],
+          "captions": []
+        }
+      ],
+      "ads": [
+        "광고 문구 또는 배너 텍스트"
+      ],
+      "headers": [
+        "2026년 4월 9일 목요일 조간"
+      ]
+    }
+  ],
+  "quality": {
+    "status": "success",
+    "parser": "mineru",
+    "warnings": [
+      "Page 1: 일부 레이아웃이 겹침"
+    ]
+  }
+}
+```
+
+#### 스키마 주요 노드 설명
+1. **`BoundingBox` (`bbox`)**: 요소가 위치한 직사각형 영역 `(x0, y0, x1, y1)`. 신문 지면 상에서의 상대적 또는 절대적 좌표를 나타냅니다.
+2. **`PageNode`**: 단일 신문 지면입니다. 여러 개의 기사(`articles`)와 광고(`ads`), 상단 헤더 정보(`headers`)를 포함합니다.
+3. **`ArticleNode`**: 가장 핵심적인 DOM 요소로, 제목(`headline`), 문단 블록 배열(`body_blocks`), 기사에 속한 이미지 목록(`images`), 기사 내 독립된 사진 설명(`captions`)으로 구성됩니다.
+4. **`ParseQuality`**: 변환 결과를 검증하기 위한 상태, 사용된 파서 엔진 정보(`mineru`), 주의해야할 품질 문제(`warnings`) 등의 메타데이터를 갖습니다.
+
+---
+
+### `GET /health`
+
+API 서버의 작동 여부를 검사하는 경량 상태 체크 엔드포인트입니다. 로드밸런서나 쿠버네티스 프로브 등에서 서비스가 살아있는지 검사할 때 사용합니다.
+
+#### 요청 / 응답
+
+```bash
+curl http://127.0.0.1:8000/health
+```
+
+```json
+{
+  "status": "ok"
+}
+```
