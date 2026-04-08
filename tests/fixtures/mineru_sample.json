@@ -1,0 +1,36 @@
+[
+  {
+    "type": "text",
+    "text": "Synthetic Chemical Daily",
+    "bbox": [80, 40, 1600, 120],
+    "role": "header"
+  },
+  {
+    "type": "text",
+    "text": "次世代電池材料",
+    "bbox": [1200, 180, 1400, 420],
+    "role": "section_headings"
+  },
+  {
+    "type": "text",
+    "text": "材料メーカーが高純度材料の量産体制を整える。",
+    "bbox": [1000, 200, 1180, 760]
+  },
+  {
+    "type": "image",
+    "img_path": "images/photo1.jpg",
+    "bbox": [1080, 780, 1600, 1120],
+    "image_caption": ["設備写真"]
+  },
+  {
+    "type": "text",
+    "text": "宇宙開発を支える産業ガス",
+    "bbox": [120, 200, 520, 300],
+    "role": "section_headings"
+  },
+  {
+    "type": "text",
+    "text": "液体水素と液体酸素の供給体制が重要になる。",
+    "bbox": [120, 320, 680, 960]
+  }
+]

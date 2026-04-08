@@ -1,0 +1,11 @@
+.DS_Store
+__pycache__/
+.pytest_cache/
+.venv/
+dist/
+build/
+*.pyc
+private/
+tmp/
+content_file_3982.pdf
+page1_300dpi-1.png
