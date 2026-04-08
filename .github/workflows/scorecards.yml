@@ -2,9 +2,8 @@ name: scorecards
 
 on:
   push:
-    branches: [main, develop]
+    branches: [develop]
   pull_request:
-    branches: [main, develop]
   schedule:
     - cron: '31 5 * * 1'
 
