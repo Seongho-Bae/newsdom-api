@@ -51,5 +51,16 @@ The source page must remain local.
 
 - `README.md`: user-facing overview and quickstart
 - `CONTRIBUTING.md`: maintainer workflow and safety rules
+- `docs/workflow/git-flow.md`: canonical branch workflow
 - `tests/fixtures/README.md`: fixture provenance and regeneration notes
 - `docs/plans/`: design and implementation planning notes
+
+## Branch workflow
+
+This repository uses a manual Git Flow model.
+
+- Branch normal work from `develop`
+- Open feature/fix/chore pull requests into `develop`
+- Use `release/*` and `hotfix/*` only when stabilizing or patching production history
+
+See `docs/workflow/git-flow.md` for the full branch model.
