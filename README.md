@@ -1,5 +1,7 @@
 # NewsDOM API
 
+[![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/Seongho-Bae/newsdom-api/badge)](https://securityscorecards.dev/viewer/?uri=github.com/Seongho-Bae/newsdom-api)
+
 NewsDOM API parses scanned Japanese newspaper PDFs into DOM-like article trees.
 
 ## Features
