@@ -1,3 +1,5 @@
+"""Build canonical NewsDOM page/article structures from parser output blocks."""
+
 from __future__ import annotations
 
 from itertools import count
@@ -14,6 +16,8 @@ from .schemas import (
 
 
 def _bbox_from_values(values: list[float] | None) -> BoundingBox | None:
+    """Convert a four-value bounding-box list into a typed schema object."""
+
     if not values or len(values) != 4:
         return None
     return BoundingBox(
@@ -25,6 +29,8 @@ def _bbox_from_values(values: list[float] | None) -> BoundingBox | None:
 
 
 def build_dom(content_list: list[dict[str, Any]], document_id: str) -> ParseResponse:
+    """Normalize MinerU-style content blocks into the canonical NewsDOM schema."""
+
     page = PageNode(page_number=1)
     article_seq = count(1)
     current_article: ArticleNode | None = None
