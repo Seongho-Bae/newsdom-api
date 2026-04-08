@@ -1,3 +1,5 @@
+"""Compare synthetic fixture metrics against the committed structural baseline."""
+
 from __future__ import annotations
 
 import json
@@ -6,12 +8,16 @@ from typing import Any
 
 
 def load_metrics(path: Path) -> dict[str, Any]:
+    """Load a JSON metrics file from disk using UTF-8 encoding."""
+
     return json.loads(path.read_text(encoding="utf-8"))
 
 
 def compare_fixture_to_baseline(
     truth_path: Path, baseline: dict[str, Any]
 ) -> dict[str, Any]:
+    """Compare a synthetic fixture metrics file against the committed baseline."""
+
     truth = load_metrics(truth_path)
     failures: list[str] = []
 
