@@ -55,7 +55,6 @@ This repository ships only synthetic test fixtures and derived structural baseli
 Development setup, fixture handling rules, and local-only baseline maintenance are documented in `CONTRIBUTING.md`.
 
 Security reporting guidance is documented in `SECURITY.md`.
-
 Version tags trigger a GitHub-native release workflow that builds distribution artifacts, checksums, and provenance attestations.
 
 Project history is tracked in `CHANGELOG.md`.
