@@ -66,6 +66,12 @@ curl -F "file=@sample.pdf" http://127.0.0.1:8000/parse
 pytest
 ```
 
+### Fuzzing smoke
+
+```bash
+python fuzzers/dom_builder_fuzzer.py --smoke tests/fixtures/mineru_sample.json
+```
+
 The repository also enforces a `quality-gate` workflow with 100% source coverage and docstring audit coverage.
 
 ## Fixtures and provenance
