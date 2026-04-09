@@ -10,7 +10,7 @@
 
 ---
 
-### Task 1: Add failing docstring audit test
+## Task 1: Add failing docstring audit test
 
 **Files:**
 - Create: `tests/test_docstrings.py`
@@ -26,7 +26,7 @@ Run: `pytest tests/test_docstrings.py -v`
 **Step 3: Add minimal code changes**
 - Backfill docstrings.
 
-### Task 2: Add coverage tooling and failing coverage measurement
+## Task 2: Add coverage tooling and failing coverage measurement
 
 **Files:**
 - Modify: `pyproject.toml`
@@ -39,7 +39,7 @@ Run: `pytest --cov=src/newsdom_api --cov-report=term-missing --cov-fail-under=10
 
 Expected: FAIL before additional tests are written.
 
-### Task 3: Backfill tests to 100% line coverage
+## Task 3: Backfill tests to 100% line coverage
 
 **Files:**
 - Create/modify targeted tests under `tests/`
@@ -53,7 +53,7 @@ Expected: FAIL before additional tests are written.
 
 **Step 2: Re-run full suite with 100% threshold**
 
-### Task 4: Add CI workflow and required check
+## Task 4: Add CI workflow and required check
 
 **Files:**
 - Create: `.github/workflows/quality-gate.yml`
@@ -63,4 +63,4 @@ Expected: FAIL before additional tests are written.
 
 **Step 2: Verify YAML, tests, and coverage locally**
 
-**Step 3: Update branch protection to require `quality-gate` on `main` and `develop`
+**Step 3: Update branch protection to require `quality-gate` on `main` and `develop`**

@@ -24,18 +24,21 @@ def test_load_font_uses_first_existing_candidate(monkeypatch):
 
 
 def test_draw_vertical_columns_stops_when_width_exhausted(monkeypatch):
-    calls = []
+    x_calls = []
     image = Image.new("L", (100, 100), color=255)
     draw = ImageDraw.Draw(image)
+    monkeypatch.setattr(synthetic, "_split_vertical", lambda *_: ["A"] * 50)
     monkeypatch.setattr(
-        synthetic, "_draw_vertical_text", lambda *args: calls.append(args[1])
+        synthetic,
+        "_draw_vertical_text",
+        lambda draw, text, x, y, font, line_height: x_calls.append(x),
     )
 
     class Font:
         size = 24
 
     synthetic._draw_vertical_columns(draw, (0, 0, 40, 120), "ABCDEFGHIJKL", Font())
-    assert calls
+    assert 0 < len(x_calls) < 50
 
 
 def test_generate_fixture_supports_horizontal_article_branch(

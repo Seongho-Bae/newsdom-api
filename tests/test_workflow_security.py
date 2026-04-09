@@ -3,9 +3,33 @@ from pathlib import Path
 
 
 PINNED_ACTION_RE = re.compile(r"uses:\s+[\w./-]+@[0-9a-f]{40}\b")
-PULL_REQUEST_BRANCH_FILTER_RE = re.compile(
-    r"pull_request:\s*\n\s+branches:", re.MULTILINE
-)
+
+
+def _has_pull_request_branch_filter(text: str) -> bool:
+    in_pull_request = False
+    pull_request_indent = None
+
+    for line in text.splitlines():
+        stripped = line.strip()
+        indent = len(line) - len(line.lstrip())
+
+        if stripped.startswith("pull_request:"):
+            in_pull_request = True
+            pull_request_indent = indent
+            continue
+
+        if in_pull_request:
+            if stripped and indent <= (pull_request_indent or 0):
+                in_pull_request = False
+                pull_request_indent = None
+                continue
+
+            if stripped.startswith("branches:") or stripped.startswith(
+                "branches-ignore:"
+            ):
+                return True
+
+    return False
 
 
 def test_workflow_actions_are_pinned_by_sha():
@@ -13,7 +37,7 @@ def test_workflow_actions_are_pinned_by_sha():
         text = workflow_path.read_text(encoding="utf-8")
         for line in text.splitlines():
             stripped = line.strip()
-            if stripped.startswith("uses:"):
+            if stripped.startswith("uses:") or stripped.startswith("- uses:"):
                 assert PINNED_ACTION_RE.search(stripped), (
                     f"unpinned action in {workflow_path}: {stripped}"
                 )
@@ -22,7 +46,7 @@ def test_workflow_actions_are_pinned_by_sha():
 def test_ci_workflows_do_not_use_pip_install_commands():
     for workflow_name in ["tests.yml", "quality-gate.yml"]:
         text = Path(f".github/workflows/{workflow_name}").read_text(encoding="utf-8")
-        assert "pip install" not in text
+        assert not re.search(r"\b(?:python\s+-m\s+)?pip3?\s+install\b", text)
 
 
 def test_ci_workflows_run_pytest_through_uv():
@@ -44,6 +68,6 @@ def test_uv_lock_exists_for_ci_reproducibility():
 def test_ci_workflows_run_for_all_pull_requests():
     for workflow_path in sorted(Path(".github/workflows").glob("*.yml")):
         text = workflow_path.read_text(encoding="utf-8")
-        assert not PULL_REQUEST_BRANCH_FILTER_RE.search(text), (
+        assert not _has_pull_request_branch_filter(text), (
             f"pull_request branch filter blocks stacked PR checks in {workflow_path}"
         )

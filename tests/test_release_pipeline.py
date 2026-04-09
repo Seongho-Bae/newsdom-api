@@ -23,7 +23,12 @@ def test_release_manifest_script_outputs_json(tmp_path: Path):
     dist.mkdir()
     artifact = dist / "demo.txt"
     artifact.write_text("demo", encoding="utf-8")
+    manifest_path = dist / "release-manifest.json"
+    manifest_path.write_text("{}", encoding="utf-8")
     manifest = build_manifest(dist)
     assert manifest["artifacts"][0]["name"] == "demo.txt"
     assert manifest["artifacts"][0]["sha256"]
+    assert all(
+        item["name"] != "release-manifest.json" for item in manifest["artifacts"]
+    )
     json.loads(json.dumps(manifest))

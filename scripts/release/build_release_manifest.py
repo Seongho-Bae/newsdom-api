@@ -22,7 +22,11 @@ def build_manifest(dist_dir: Path) -> dict[str, object]:
     """Build manifest metadata for all regular files in a dist directory."""
 
     artifacts = []
-    for path in sorted(p for p in dist_dir.iterdir() if p.is_file()):
+    for path in sorted(
+        p
+        for p in dist_dir.iterdir()
+        if p.is_file() and p.name != "release-manifest.json"
+    ):
         artifacts.append(
             {
                 "name": path.name,

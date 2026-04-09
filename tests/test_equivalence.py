@@ -35,4 +35,11 @@ def test_compare_fixture_to_baseline_reports_failures(tmp_path: Path):
     }
     result = compare_fixture_to_baseline(truth_path, baseline)
     assert result["equivalent"] is False
-    assert "column_count" in result["failures"]
+    assert set(result["failures"]) == {
+        "column_count",
+        "article_count",
+        "image_count",
+        "ad_count",
+        "headline_blocks",
+        "vertical_article_ratio",
+    }

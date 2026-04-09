@@ -55,6 +55,9 @@ def test_run_mineru_reads_generated_json(monkeypatch, tmp_path: Path):
     called = {}
 
     def fake_run(cmd, check, capture_output, text):
+        assert check is True
+        assert capture_output is True
+        assert text is True
         called["cmd"] = cmd
 
         class Result:
@@ -88,7 +91,9 @@ def test_run_mineru_raises_when_content_json_missing(monkeypatch, tmp_path: Path
     monkeypatch.setattr(
         mineru_runner.subprocess,
         "run",
-        lambda *args, **kwargs: type("Result", (), {"stdout": "", "stderr": ""})(),
+        lambda cmd, check, capture_output, text: type(
+            "Result", (), {"stdout": "", "stderr": ""}
+        )(),
     )
 
     with pytest.raises(FileNotFoundError):
@@ -112,7 +117,9 @@ def test_run_mineru_raises_when_model_json_missing(monkeypatch, tmp_path: Path):
     monkeypatch.setattr(
         mineru_runner.subprocess,
         "run",
-        lambda *args, **kwargs: type("Result", (), {"stdout": "", "stderr": ""})(),
+        lambda cmd, check, capture_output, text: type(
+            "Result", (), {"stdout": "", "stderr": ""}
+        )(),
     )
 
     with pytest.raises(FileNotFoundError):
