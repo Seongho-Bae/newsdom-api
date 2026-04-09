@@ -18,6 +18,15 @@ def _bundle_candidates(working_dir: Path, digest: str) -> tuple[Path, Path]:
     )
 
 
+def _gh_executable() -> str:
+    """Return the gh executable path used to download attestations."""
+
+    gh = shutil.which("gh")
+    if gh is None:
+        raise FileNotFoundError("gh executable not found in PATH")
+    return gh
+
+
 def export_attestations(
     dist_dir: Path, repo: str, *, working_dir: Path | None = None
 ) -> list[Path]:
@@ -25,6 +34,7 @@ def export_attestations(
 
     working_dir = (working_dir or Path.cwd()).resolve()
     exported: list[Path] = []
+    gh = _gh_executable()
 
     for artifact in sorted(dist_dir.iterdir()):
         if not artifact.is_file():
@@ -35,8 +45,9 @@ def export_attestations(
             continue
 
         subprocess.run(
-            ["gh", "attestation", "download", str(artifact), "-R", repo],
+            [gh, "attestation", "download", str(artifact), "-R", repo],
             check=True,
+            cwd=working_dir,
         )
 
         digest = hashlib.sha256(artifact.read_bytes()).hexdigest()
