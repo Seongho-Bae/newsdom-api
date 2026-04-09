@@ -14,6 +14,6 @@ def test_circleci_config_exists_and_uses_uv_quality_gate():
     assert "uv sync --locked --extra dev" in text
     assert "PYTHONWARNINGS=error uv run pytest" in text
     assert (
-        "uv run pytest --cov=src/newsdom_api --cov-report=term-missing --cov-fail-under=100"
+        "uv run pytest --cov=src/newsdom_api --cov-branch --cov-report=term-missing --cov-fail-under=100"
         in text
     )

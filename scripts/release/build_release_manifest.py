@@ -18,15 +18,18 @@ def _sha256(path: Path) -> str:
     return digest.hexdigest()
 
 
-def build_manifest(dist_dir: Path) -> dict[str, object]:
+def build_manifest(
+    dist_dir: Path, *, exclude: set[Path] | None = None
+) -> dict[str, object]:
     """Build manifest metadata for all regular files in a dist directory."""
 
+    excluded = {path.resolve() for path in (exclude or set())}
     artifacts = []
     for path in sorted(
-        p
-        for p in dist_dir.iterdir()
-        if p.is_file() and p.name != "release-manifest.json"
+        (p for p in dist_dir.iterdir() if p.is_file()), key=lambda p: p.name
     ):
+        if path.name == "release-manifest.json" or path.resolve() in excluded:
+            continue
         artifacts.append(
             {
                 "name": path.name,
@@ -45,8 +48,9 @@ def main() -> None:
     parser.add_argument("output", type=Path)
     args = parser.parse_args()
 
-    manifest = build_manifest(args.dist_dir)
-    args.output.write_text(json.dumps(manifest, indent=2), encoding="utf-8")
+    output = args.output.resolve()
+    manifest = build_manifest(args.dist_dir, exclude={output})
+    output.write_text(json.dumps(manifest, indent=2), encoding="utf-8")
 
 
 if __name__ == "__main__":

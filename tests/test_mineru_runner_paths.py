@@ -74,6 +74,44 @@ def test_run_mineru_reads_generated_json(monkeypatch, tmp_path: Path):
     assert result["stderr"] == "stderr"
 
 
+def test_run_mineru_prefers_exact_stem_content_json(monkeypatch, tmp_path: Path):
+    tempdir = tmp_path / "temp"
+    ocr_dir = tempdir / "sample" / "ocr"
+    ocr_dir.mkdir(parents=True)
+    (ocr_dir / "sample_content_list.json").write_text(
+        json.dumps([{"type": "text", "text": "exact"}]), encoding="utf-8"
+    )
+    (ocr_dir / "alt_content_list.json").write_text(
+        json.dumps([{"type": "text", "text": "fallback"}]), encoding="utf-8"
+    )
+    (ocr_dir / "alt_model.json").write_text(
+        json.dumps([{"layout_dets": []}]), encoding="utf-8"
+    )
+
+    monkeypatch.setenv("NEWSDOM_MINERU_BIN", "/opt/mineru")
+    monkeypatch.setattr(
+        mineru_runner.tempfile,
+        "TemporaryDirectory",
+        lambda prefix: _FakeTempDir(tempdir),
+    )
+
+    def fake_run(cmd, check, capture_output, text):
+        assert check is True
+        assert capture_output is True
+        assert text is True
+
+        class Result:
+            stdout = "stdout"
+            stderr = "stderr"
+
+        return Result()
+
+    monkeypatch.setattr(mineru_runner.subprocess, "run", fake_run)
+
+    result = mineru_runner.run_mineru(Path("sample.pdf"))
+    assert result["content_list"][0]["text"] == "exact"
+
+
 def test_run_mineru_raises_when_content_json_missing(monkeypatch, tmp_path: Path):
     tempdir = tmp_path / "temp"
     ocr_dir = tempdir / "sample" / "ocr"

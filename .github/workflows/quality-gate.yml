@@ -26,6 +26,8 @@ jobs:
 
       - name: Setup uv
         uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e
+        with:
+          version: '0.11.3'
 
       - name: Install package
         run: uv sync --locked --extra dev
@@ -33,4 +35,4 @@ jobs:
       - name: Run quality gate
         env:
           PYTHONWARNINGS: error
-        run: uv run pytest --cov=src/newsdom_api --cov-report=term-missing --cov-fail-under=100
+        run: uv run pytest --cov=src/newsdom_api --cov-branch --cov-report=term-missing --cov-fail-under=100

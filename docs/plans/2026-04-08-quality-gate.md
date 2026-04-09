@@ -35,7 +35,7 @@ Run: `pytest tests/test_docstrings.py -v`
 
 **Step 2: Run coverage command to measure current gap**
 
-Run: `pytest --cov=src/newsdom_api --cov-report=term-missing --cov-fail-under=100`
+Run: `pytest --cov=src/newsdom_api --cov-branch --cov-report=term-missing --cov-fail-under=100`
 
 Expected: FAIL before additional tests are written.
 

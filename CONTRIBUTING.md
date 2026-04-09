@@ -19,7 +19,7 @@ pip install "mineru[pipeline]==3.0.9"
 ```bash
 pytest
 PYTHONWARNINGS=error pytest
-pytest --cov=src/newsdom_api --cov-report=term-missing --cov-fail-under=100
+pytest --cov=src/newsdom_api --cov-branch --cov-report=term-missing --cov-fail-under=100
 ```
 
 CI installs dependencies from `uv.lock`, and workflow actions are pinned by immutable commit SHA. Keep both policies intact when editing `.github/` automation.

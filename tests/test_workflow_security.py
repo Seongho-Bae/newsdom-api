@@ -2,7 +2,16 @@ import re
 from pathlib import Path
 
 
-PINNED_ACTION_RE = re.compile(r"uses:\s+[\w./-]+@[0-9a-f]{40}\b")
+PINNED_ACTION_RE = re.compile(r"(?:-\s+)?uses:\s+[\w./-]+@[0-9a-f]{40}")
+
+
+def _iter_workflow_paths(workflow_dir: Path | None = None) -> list[Path]:
+    workflow_dir = workflow_dir or Path(".github/workflows")
+    return sorted([*workflow_dir.glob("*.yml"), *workflow_dir.glob("*.yaml")])
+
+
+def _is_pinned_action_line(line: str) -> bool:
+    return bool(PINNED_ACTION_RE.fullmatch(line.split("#", 1)[0].rstrip()))
 
 
 def _has_pull_request_branch_filter(text: str) -> bool:
@@ -33,12 +42,12 @@ def _has_pull_request_branch_filter(text: str) -> bool:
 
 
 def test_workflow_actions_are_pinned_by_sha():
-    for workflow_path in sorted(Path(".github/workflows").glob("*.yml")):
+    for workflow_path in _iter_workflow_paths():
         text = workflow_path.read_text(encoding="utf-8")
         for line in text.splitlines():
             stripped = line.strip()
             if stripped.startswith("uses:") or stripped.startswith("- uses:"):
-                assert PINNED_ACTION_RE.search(stripped), (
+                assert _is_pinned_action_line(stripped), (
                     f"unpinned action in {workflow_path}: {stripped}"
                 )
 
@@ -56,7 +65,7 @@ def test_ci_workflows_run_pytest_through_uv():
     )
     assert "uv run pytest" in tests_text
     assert (
-        "uv run pytest --cov=src/newsdom_api --cov-report=term-missing --cov-fail-under=100"
+        "uv run pytest --cov=src/newsdom_api --cov-branch --cov-report=term-missing --cov-fail-under=100"
         in quality_text
     )
 
@@ -65,8 +74,13 @@ def test_uv_lock_exists_for_ci_reproducibility():
     assert Path("uv.lock").exists()
 
 
+def test_coverage_config_enables_branch_coverage():
+    text = Path("pyproject.toml").read_text(encoding="utf-8")
+    assert "branch = true" in text
+
+
 def test_ci_workflows_run_for_all_pull_requests():
-    for workflow_path in sorted(Path(".github/workflows").glob("*.yml")):
+    for workflow_path in _iter_workflow_paths():
         text = workflow_path.read_text(encoding="utf-8")
         assert not _has_pull_request_branch_filter(text), (
             f"pull_request branch filter blocks stacked PR checks in {workflow_path}"
@@ -93,3 +107,27 @@ def test_docs_workflow_uses_pages_artifact_deploy_path():
     assert "mkdocs gh-deploy" not in text
     assert "actions/upload-pages-artifact@" in text
     assert "actions/deploy-pages@" in text
+
+
+def test_quality_gate_workflow_pins_uv_version():
+    text = Path(".github/workflows/quality-gate.yml").read_text(encoding="utf-8")
+    assert "astral-sh/setup-uv@" in text
+    assert "version: '0.11.3'" in text
+
+
+def test_iter_workflow_paths_includes_yaml_extension(tmp_path: Path):
+    workflow_dir = tmp_path / ".github" / "workflows"
+    workflow_dir.mkdir(parents=True)
+    (workflow_dir / "alpha.yml").write_text("name: alpha\n", encoding="utf-8")
+    (workflow_dir / "beta.yaml").write_text("name: beta\n", encoding="utf-8")
+
+    assert [path.name for path in _iter_workflow_paths(workflow_dir)] == [
+        "alpha.yml",
+        "beta.yaml",
+    ]
+
+
+def test_is_pinned_action_line_rejects_sha_only_in_comment():
+    assert not _is_pinned_action_line(
+        "- uses: actions/checkout@v4 # 34e114876b0b11c390a56381ad16ebd13914f8d5"
+    )

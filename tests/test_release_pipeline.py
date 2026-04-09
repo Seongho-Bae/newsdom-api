@@ -37,3 +37,31 @@ def test_release_manifest_script_outputs_json(tmp_path: Path):
         item["name"] != "release-manifest.json" for item in manifest["artifacts"]
     )
     json.loads(json.dumps(manifest))
+
+
+def test_release_manifest_script_excludes_explicit_output_path(tmp_path: Path):
+    from scripts.release.build_release_manifest import build_manifest
+
+    dist = tmp_path / "dist"
+    dist.mkdir()
+    artifact = dist / "demo.txt"
+    artifact.write_text("demo", encoding="utf-8")
+    output_path = dist / "custom-manifest.json"
+    output_path.write_text("{}", encoding="utf-8")
+
+    manifest = build_manifest(dist, exclude={output_path})
+
+    assert [item["name"] for item in manifest["artifacts"]] == ["demo.txt"]
+
+
+def test_release_workflow_publish_step_is_idempotent():
+    text = Path(".github/workflows/release.yml").read_text(encoding="utf-8")
+    assert 'gh release view "${GITHUB_REF_NAME}"' in text
+    assert 'gh release upload "${GITHUB_REF_NAME}" dist/* --clobber' in text
+    assert 'gh release create "${GITHUB_REF_NAME}" dist/* --generate-notes' in text
+
+
+def test_release_workflow_pins_uv_version():
+    text = Path(".github/workflows/release.yml").read_text(encoding="utf-8")
+    assert "astral-sh/setup-uv@" in text
+    assert "version: '0.11.3'" in text

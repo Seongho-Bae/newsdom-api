@@ -28,7 +28,7 @@ jobs:
           name: Run coverage quality gate
           command: |
             source "$BASH_ENV"
-            uv run pytest --cov=src/newsdom_api --cov-report=term-missing --cov-fail-under=100
+            uv run pytest --cov=src/newsdom_api --cov-branch --cov-report=term-missing --cov-fail-under=100
 
 workflows:
   quality-gate:
