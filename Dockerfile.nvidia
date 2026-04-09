@@ -1,4 +1,9 @@
-FROM nvidia/cuda:12.6.3-cudnn-runtime-ubuntu22.04 AS builder
+ARG NVIDIA_BASE=nvidia/cuda:12.6.3-cudnn-runtime-ubuntu22.04@sha256:46cb48a4abfbc40c836fe57bc05a07101b6458fffc63bbdfd6a50db98c9358bd
+ARG UV_IMAGE=ghcr.io/astral-sh/uv@sha256:90bbb3c16635e9627f49eec6539f956d70746c409209041800a0280b93152823
+
+FROM ${UV_IMAGE} AS uv-bin
+
+FROM --platform=linux/amd64 ${NVIDIA_BASE} AS builder
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
@@ -10,7 +15,7 @@ RUN apt-get update && \
     apt-get install -y --no-install-recommends python3 python3-pip python3-venv ca-certificates && \
     rm -rf /var/lib/apt/lists/*
 
-RUN python3 -m pip install --no-cache-dir "uv==0.11.3"
+COPY --from=uv-bin /uv /uvx /usr/local/bin/
 
 COPY pyproject.toml uv.lock README.md ./
 COPY src/ src/
@@ -18,7 +23,7 @@ COPY src/ src/
 RUN uv sync --python python3 --frozen --no-dev && \
     uv pip install --python .venv/bin/python "mineru[pipeline]==3.0.9"
 
-FROM nvidia/cuda:12.6.3-cudnn-runtime-ubuntu22.04 AS runtime
+FROM --platform=linux/amd64 ${NVIDIA_BASE} AS runtime
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \

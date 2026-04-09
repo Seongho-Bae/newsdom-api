@@ -20,6 +20,8 @@ def test_dockerfile_uses_project_metadata_and_src_layout():
     assert "pyproject.toml" in text
     assert "uv.lock" in text
     assert "src/" in text
+    assert "python:3.12-slim@sha256:" in text
+    assert "ghcr.io/astral-sh/uv@sha256:" in text
 
 
 def test_dockerfile_runs_uvicorn_with_healthcheck_and_external_mineru_path():
@@ -36,7 +38,9 @@ def test_dockerfile_runs_uvicorn_with_healthcheck_and_external_mineru_path():
 
 def test_nvidia_dockerfile_installs_mineru_pipeline_stack():
     text = Path("Dockerfile.nvidia").read_text(encoding="utf-8")
-    assert "mineru[pipeline]==3.0.9" in text
+    assert "nvidia/cuda:12.6.3-cudnn-runtime-ubuntu22.04@sha256:" in text
+    assert "ghcr.io/astral-sh/uv@sha256:" in text
+    assert 'uv pip install --python .venv/bin/python "mineru[pipeline]==3.0.9"' in text
     assert "NEWSDOM_MINERU_BIN" in text
 
 
