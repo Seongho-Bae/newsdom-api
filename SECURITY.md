@@ -2,7 +2,12 @@
 
 ## Reporting a vulnerability
 
-Please report a vulnerability privately by opening a GitHub Security Advisory draft for this repository or by contacting the maintainer through the repository owner profile. Do not open a public issue for an unpatched vulnerability.
+Please report a vulnerability privately by opening a GitHub Security Advisory draft for this repository:
+
+- https://github.com/Seongho-Bae/newsdom-api/security/advisories/new
+- https://github.com/seonghobae
+
+Do not open a public issue for an unpatched vulnerability.
 
 When reporting, include:
 
