@@ -29,7 +29,15 @@ def test_clusterfuzzlite_workflow_runs_pinned_python_code_change_fuzzing():
 
 def test_clusterfuzzlite_dockerfile_places_build_script_at_src_root():
     text = Path(".clusterfuzzlite/Dockerfile").read_text(encoding="utf-8")
+    assert "gcr.io/oss-fuzz-base/base-builder-python@sha256:" in text
+    assert "ghcr.io/astral-sh/uv@sha256:" in text
     assert "COPY .clusterfuzzlite/build.sh /src/build.sh" in text
+
+
+def test_clusterfuzzlite_build_script_uses_locked_uv_fuzz_extra():
+    text = Path(".clusterfuzzlite/build.sh").read_text(encoding="utf-8")
+    assert "uv sync --frozen --extra fuzz" in text
+    assert "pip3 install . pyinstaller atheris" not in text
 
 
 def test_dom_builder_fuzzer_smoke_mode_runs_without_cluster():
