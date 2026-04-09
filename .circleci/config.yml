@@ -1,0 +1,33 @@
+version: 2.1
+
+jobs:
+  quality-gate:
+    docker:
+      - image: cimg/python:3.10
+    steps:
+      - checkout
+      - run:
+          name: Install uv
+          command: |
+            curl -LsSf https://astral.sh/uv/install.sh | sh
+            echo 'export PATH="$HOME/.local/bin:$PATH"' >> "$BASH_ENV"
+      - run:
+          name: Install project dependencies
+          command: |
+            source "$BASH_ENV"
+            uv sync --locked --extra dev
+      - run:
+          name: Run warnings-as-errors tests
+          command: |
+            source "$BASH_ENV"
+            PYTHONWARNINGS=error uv run pytest
+      - run:
+          name: Run coverage quality gate
+          command: |
+            source "$BASH_ENV"
+            uv run pytest --cov=src/newsdom_api --cov-report=term-missing --cov-fail-under=100
+
+workflows:
+  quality-gate:
+    jobs:
+      - quality-gate
