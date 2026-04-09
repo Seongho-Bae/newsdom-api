@@ -4,7 +4,7 @@
 
 ## 🛠️ 시스템 요구사항
 
-- **Python**: Required: `>=3.10, <3.14` / Recommended: `python3.10`
+- **Python**: Required: `>=3.10, <3.14`
 - **운영체제**: Linux 또는 macOS 권장 (윈도우의 경우 WSL2 사용 권장)
 - **하드웨어 (GPU)**: `MinerU` 딥러닝 기반 파이프라인을 구동하기 위해서는 최소 **8GB 이상의 RAM**이 필요하며, 실시간 처리를 위해 **NVIDIA GPU(CUDA 11.x/12.x 호환)** 및 `PyTorch` 환경이 권장됩니다.
 - **의존성 (Python)**:
@@ -15,7 +15,7 @@
 
 ## 1. 기본 테스트 및 개발 모드 설치
 
-가장 간단한 형태로 파이썬 가상환경(Virtual Environment)을 생성하고 패키지를 설치합니다. 이 모드에서는 실제 `MinerU` 모델이 로드되지 않으며, `pytest`나 합성 픽스처(Synthetic Fixtures) 기반 테스트 용도로 적합합니다.
+가장 간단한 형태로 파이썬 가상환경(Virtual Environment)을 생성하고 패키지를 설치합니다. 이 모드에서는 실제 `MinerU` 모델이 로드되지 않으며, `pytest`나 합성 픽스처(Synthetic Fixtures) 기반 테스트 용도로 적합합니다. 예시 명령은 `python3.10`을 사용하지만, 지원 범위 안의 다른 인터프리터도 동일하게 사용할 수 있습니다.
 
 ```bash
 # 가상 환경 생성 (권장 예시: python3.10)

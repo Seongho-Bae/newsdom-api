@@ -24,7 +24,10 @@ def test_development_doc_uses_tree_wording():
 def test_installation_doc_uses_quoted_extras_and_clear_python_wording():
     text = Path("manual/installation.md").read_text(encoding="utf-8")
     assert "Required: `>=3.10, <3.14`" in text
-    assert "Recommended: `python3.10`" in text
+    assert (
+        "예시 명령은 `python3.10`을 사용하지만, 지원 범위 안의 다른 인터프리터도 동일하게 사용할 수 있습니다."
+        in text
+    )
     assert "python3.10 -m venv .venv" in text
     assert 'pip install -e ".[dev]"' in text
     assert 'pip install "mineru[pipeline]==3.0.9"' in text
