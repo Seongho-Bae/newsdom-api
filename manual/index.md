@@ -1,29 +1,40 @@
-# NewsDOM API 개요
+# NewsDOM API 개요 및 아키텍처
 
 [![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/Seongho-Bae/newsdom-api/badge)](https://securityscorecards.dev/viewer/?uri=github.com/Seongho-Bae/newsdom-api)
 
-**NewsDOM API**는 스캔된 일본어 신문 PDF 문서를 분석하여, DOM 형태의 문서 트리 구조로 파싱해주는 API 서비스입니다.
+**NewsDOM API**는 스캔된 일본어 신문 PDF 문서를 분석하여, 웹 브라우저의 DOM(Document Object Model)과 유사한 기사(Article) 단위의 트리 구조로 파싱해주는 API 서비스입니다.
 
-과거의 신문 이미지는 단순 텍스트 추출(OCR)만으로는 다단 레이아웃이나 이미지/캡션, 기사별 흐름을 파악하기 매우 어렵습니다. 이 프로젝트는 **MinerU 모델 파이프라인**을 활용해 지면을 단일 기사(Article) 단위로 쪼개고, 마치 웹 브라우저의 DOM(Document Object Model)과 같이 트리 구조의 JSON 데이터로 변환해 줍니다.
-
----
-
-## 핵심 구조 및 기능
-
-- **백엔드 엔진**: `MinerU` 파이프라인 (v3.0.9)
-- **API 프레임워크**: `FastAPI` 기반 비동기 API 서버
-- **DOM 변환기**: 
-  - 신문 지면 1장(Page) 단위를 분석하여, 그 안의 기사(Articles), 광고(Ads), 헤더(Headers) 영역을 구분합니다.
-  - 각 기사는 헤드라인(Headline), 본문 블록(Body blocks), 연관된 이미지(Images) 및 이미지 캡션(Captions)으로 다시 세분화됩니다.
-  - 모든 구성 요소는 원본 문서 내 위치 좌표(`BoundingBox`)를 포함할 수 있습니다.
-
-## 아키텍처 개요
-
-1. **사용자 요청**: 사용자가 API(`/parse`)로 신문 스캔본 PDF 파일을 업로드합니다.
-2. **FastAPI 처리**: 비동기 서버가 파일을 메모리로 읽어들여 파싱 모듈로 넘깁니다.
-3. **MinerU 파이프라인**: 딥러닝 기반 레이아웃 분석 및 OCR을 수행합니다.
-4. **DOM 빌더**: 인식된 영역들을 기사 논리에 맞게 트리 구조(Canonical JSON)로 병합하고 반환합니다.
+과거의 신문 이미지는 단순 텍스트 추출(OCR)만으로는 다단 레이아웃이나 이미지/캡션, 기사별 흐름을 파악하기 매우 어렵습니다. 본 프로젝트는 딥러닝 기반 레이아웃 분석 도구인 **MinerU**를 백엔드로 사용하여 이 문제를 해결합니다.
 
 ---
 
-👉 다음 단계로 **[설치 가이드](installation.md)**를 읽고 직접 환경을 구성해 보세요.
+## ⚙️ 시스템 내부 아키텍처 (Under the Hood)
+
+사용자가 API를 통해 PDF 파일을 업로드하면, NewsDOM 내부에서는 다음의 세 단계를 거쳐 데이터를 처리합니다:
+
+### 1. 서비스 래퍼 레이어 (`src/newsdom_api/service.py`)
+FastAPI 엔드포인트(`/parse`)가 `UploadFile`로 전달받은 바이너리 데이터를 임시 디렉토리(Temporary Directory)에 저장한 후, 파이프라인 러너를 호출합니다.
+
+### 2. MinerU 파이프라인 러너 (`src/newsdom_api/mineru_runner.py`)
+저장된 PDF를 대상으로 Python `subprocess` 모듈을 이용해 **MinerU CLI**를 백그라운드에서 실행합니다. 실제 내부적으로 실행되는 명령어는 다음과 같습니다:
+
+```bash
+mineru -p <업로드된_PDF> -o <임시출력경로> -b pipeline -m ocr -l japan
+```
+> *참고: 일본어 신문 처리에 최적화하기 위해 `-l japan` (Language: Japanese) 옵션과 OCR 파이프라인 모드가 하드코딩되어 있습니다.*
+
+명령어 실행이 완료되면 러너는 생성된 출력 폴더(OCR 하위 폴더)를 뒤져 `*_content_list.json` 파일과 `*_model.json` 결과물을 메모리로 로드합니다.
+
+### 3. DOM 빌더 (`src/newsdom_api/dom_builder.py`)
+MinerU가 뱉어낸 선형적인(Linear) 블록 리스트(`content_list.json`)를 순회하면서 논리적인 트리 형태의 **`ParseResponse` (Canonical JSON)**로 재구성합니다.
+- `role == "header"` 이면 상단 머릿말로(`PageNode.headers`) 분류
+- `type == "ad"` 또는 `role == "ad"` 이면 지면 광고(`PageNode.ads`)로 분류
+- `text_level == 1` 이거나 `role == "section_headings"`인 경우 새로운 기사의 시작(Headline)으로 인식하여 새 `ArticleNode`를 생성
+- 이후 등장하는 일반 텍스트는 해당 기사의 `body_blocks` 배열에 추가
+- `type == "image"` 이면 `ImageNode`를 생성하고 포함된 캡션 배열을 파싱하여 기사에 종속시킴
+
+이러한 세밀한 내부 변환 과정을 통해 단순한 OCR 텍스트 덤프가 아닌, 프론트엔드에서 즉시 렌더링이 가능한 **구조화된 DOM 데이터**가 최종 반환됩니다.
+
+---
+
+👉 **[설치 가이드](installation.md)**를 읽고 직접 환경을 구성해 보세요.
