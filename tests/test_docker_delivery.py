@@ -1,0 +1,74 @@
+from pathlib import Path
+
+import yaml
+
+
+def test_dockerfile_exists():
+    assert Path("Dockerfile").exists()
+
+
+def test_nvidia_dockerfile_exists():
+    assert Path("Dockerfile.nvidia").exists()
+
+
+def test_dockerignore_exists():
+    assert Path(".dockerignore").exists()
+
+
+def test_dockerfile_uses_project_metadata_and_src_layout():
+    text = Path("Dockerfile").read_text(encoding="utf-8")
+    assert "pyproject.toml" in text
+    assert "uv.lock" in text
+    assert "src/" in text
+
+
+def test_dockerfile_runs_uvicorn_with_healthcheck_and_external_mineru_path():
+    text = Path("Dockerfile").read_text(encoding="utf-8")
+    assert "uvicorn" in text
+    assert "newsdom_api.main:app" in text
+    assert "NEWSDOM_MINERU_BIN" in text
+    assert "--host" in text
+    assert "0.0.0.0" in text
+    assert "8000" in text
+    assert "HEALTHCHECK" in text
+    assert "/health" in text
+
+
+def test_nvidia_dockerfile_installs_mineru_pipeline_stack():
+    text = Path("Dockerfile.nvidia").read_text(encoding="utf-8")
+    assert "mineru[pipeline]==3.0.9" in text
+    assert "NEWSDOM_MINERU_BIN" in text
+
+
+def test_dockerignore_excludes_local_noise():
+    text = Path(".dockerignore").read_text(encoding="utf-8")
+    for entry in [".git", ".venv", "__pycache__", ".pytest_cache", ".coverage"]:
+        assert entry in text
+
+
+def test_readme_documents_docker_build_and_run():
+    text = Path("README.md").read_text(encoding="utf-8")
+    assert "docker build -t newsdom-api" in text
+    assert "docker run -p 8000:8000 newsdom-api" in text
+    assert "Dockerfile.nvidia" in text
+    assert "Apple Silicon" in text
+    assert "NVIDIA" in text
+
+
+def test_container_image_workflow_exists_for_ghcr_release():
+    data = yaml.safe_load(
+        Path(".github/workflows/container-image.yml").read_text(encoding="utf-8")
+    )
+    assert data["jobs"]["image"]["env"]["REGISTRY"] == "ghcr.io"
+    assert (
+        data["jobs"]["image"]["steps"][4]["uses"]
+        == "docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8"
+    )
+    assert (
+        data["jobs"]["image"]["steps"][4]["with"]["platforms"]
+        == "linux/amd64,linux/arm64"
+    )
+    assert (
+        data["jobs"]["image-nvidia"]["steps"][4]["with"]["file"]
+        == "./Dockerfile.nvidia"
+    )

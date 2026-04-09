@@ -32,6 +32,28 @@ pip install "mineru[pipeline]==3.0.9"
 uvicorn newsdom_api.main:app --reload
 ```
 
+### Docker
+
+```bash
+docker build -t newsdom-api .
+docker run -p 8000:8000 newsdom-api
+```
+
+The default image exposes the REST API on port `8000` as a lean multi-arch service image. It is suitable for `linux/amd64` and `linux/arm64`, including Apple Silicon hosts running the API service inside Docker.
+
+The lean image is intentionally a REST API shell: `/health`, `/docs`, and OpenAPI endpoints are available immediately, while real `/parse` execution still requires a compatible MinerU runtime to be available inside the container image.
+
+For heavier parsing deployments, build the optional NVIDIA-oriented variant:
+
+```bash
+docker build -f Dockerfile.nvidia -t newsdom-api:nvidia .
+docker run --gpus all -p 8000:8000 newsdom-api:nvidia
+```
+
+`Dockerfile.nvidia` is intended for Linux/NVIDIA environments and is `linux/amd64`-only. Apple Silicon can run the lean API image, but Docker Desktop does not expose Apple GPU acceleration to Linux containers, so real GPU-accelerated parsing should stay on a native Apple Silicon path instead of the containerized runtime.
+
+The NVIDIA variant is `linux/amd64`-only and is meant for hosts that can provide the CUDA user-space/runtime stack required by MinerU.
+
 ### Parse a PDF
 
 ```bash
