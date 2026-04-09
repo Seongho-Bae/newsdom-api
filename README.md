@@ -56,6 +56,8 @@ Development setup, fixture handling rules, and local-only baseline maintenance a
 
 Version tags trigger a GitHub-native release workflow that builds distribution artifacts, checksums, and provenance attestations.
 
+Project history is tracked in `CHANGELOG.md`.
+
 Repository branch workflow is documented in `docs/workflow/git-flow.md`.
 
 ## Repository layout
