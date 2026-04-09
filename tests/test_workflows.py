@@ -11,4 +11,5 @@ def test_scorecards_push_runs_only_on_default_branch():
 def test_scorecards_pull_requests_cover_main_and_develop():
     text = Path(".github/workflows/scorecards.yml").read_text(encoding="utf-8")
     assert "pull_request:" in text
-    assert "branches: [main, develop]" in text
+    pull_request_section = text.split("pull_request:", 1)[1].split("schedule:", 1)[0]
+    assert "branches:" not in pull_request_section
