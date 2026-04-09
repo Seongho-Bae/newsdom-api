@@ -18,10 +18,9 @@ def test_project_uses_spdx_license_string_not_deprecated_table():
     assert 'license = {text = "MIT"}' not in text
 
 
-def test_project_declares_locked_nvidia_and_fuzz_extras():
+def test_project_declares_locked_fuzz_extra_without_bundling_nvidia_stack():
     text = Path("pyproject.toml").read_text(encoding="utf-8")
-    assert "nvidia = [" in text
-    assert '"mineru[pipeline]==3.0.9 ;' in text
     assert "fuzz = [" in text
     assert '"atheris==3.0.0 ;' in text
     assert '"pyinstaller==6.16.0"' in text
+    assert "nvidia = [" not in text

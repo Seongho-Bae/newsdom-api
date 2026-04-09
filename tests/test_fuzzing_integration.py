@@ -25,6 +25,7 @@ def test_clusterfuzzlite_workflow_runs_pinned_python_code_change_fuzzing():
     assert "language: python" in text
     assert "mode: code-change" in text
     assert "fuzz-seconds: 300" in text
+    assert "github-token: ${{ github.token }}" in text
 
 
 def test_clusterfuzzlite_dockerfile_places_build_script_at_src_root():

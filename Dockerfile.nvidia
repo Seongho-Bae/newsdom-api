@@ -20,7 +20,8 @@ COPY --from=uv-bin /uv /uvx /usr/local/bin/
 COPY pyproject.toml uv.lock README.md ./
 COPY src/ src/
 
-RUN uv sync --python python3 --frozen --no-dev --extra nvidia
+RUN uv sync --python python3 --frozen --no-dev && \
+    uv pip install --python .venv/bin/python "mineru[pipeline]==3.0.9"
 
 FROM --platform=linux/amd64 ${NVIDIA_BASE} AS runtime
 
