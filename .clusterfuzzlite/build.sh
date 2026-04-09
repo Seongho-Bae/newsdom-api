@@ -3,7 +3,8 @@ set -euo pipefail
 
 cd "$SRC/newsdom-api"
 
-pip3 install . pyinstaller atheris
+uv sync --frozen --extra fuzz
+export PATH="$SRC/newsdom-api/.venv/bin:$PATH"
 
 for fuzzer in $(find fuzzers -name '*_fuzzer.py'); do
 	fuzzer_basename=$(basename -s .py "$fuzzer")

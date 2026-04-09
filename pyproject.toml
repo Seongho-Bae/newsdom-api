@@ -31,6 +31,13 @@ docs = [
     "mkdocs>=1.6,<2.0",
     "mkdocs-material>=9.6,<9.7",
 ]
+nvidia = [
+  "mineru[pipeline]==3.0.9 ; platform_system == 'Linux' and platform_machine == 'x86_64'",
+]
+fuzz = [
+  "atheris==3.0.0 ; platform_system == 'Linux' and python_version >= '3.11'",
+  "pyinstaller==6.16.0",
+]
 
 [tool.setuptools]
 package-dir = {"" = "src"}
