@@ -26,6 +26,15 @@ CI installs dependencies from `uv.lock`, and workflow actions are pinned by immu
 
 CircleCI parity is defined in `.circleci/config.yml` and mirrors the same uv-locked warnings-as-errors and 100% coverage quality gate.
 
+## Documentation build
+
+The GitHub Pages workflow installs documentation tooling from `uv.lock` via the optional `docs` extra. For local maintainer work, sync all extras so the docs build does not drop the test toolchain from the active environment.
+
+```bash
+uv sync --frozen --all-extras
+uv run mkdocs build --strict
+```
+
 Tagged releases use `.github/workflows/release.yml` to build artifacts, generate SHA256 checksums, emit a JSON manifest, and publish a GitHub Release with provenance attestation.
 
 ## Fixture policy

@@ -71,3 +71,25 @@ def test_ci_workflows_run_for_all_pull_requests():
         assert not _has_pull_request_branch_filter(text), (
             f"pull_request branch filter blocks stacked PR checks in {workflow_path}"
         )
+
+
+def test_docs_workflow_uses_least_privilege_pages_permissions():
+    text = Path(".github/workflows/gh-pages.yml").read_text(encoding="utf-8")
+    assert "contents: write" not in text
+    assert "pages: write" in text
+    assert "id-token: write" in text
+
+
+def test_docs_workflow_installs_docs_tooling_from_locked_uv_dependencies():
+    text = Path(".github/workflows/gh-pages.yml").read_text(encoding="utf-8")
+    assert not re.search(r"\b(?:python\s+-m\s+)?pip3?\s+install\b", text)
+    assert "astral-sh/setup-uv@" in text
+    assert "uv sync --frozen --extra docs" in text
+    assert "uv run mkdocs build --strict" in text
+
+
+def test_docs_workflow_uses_pages_artifact_deploy_path():
+    text = Path(".github/workflows/gh-pages.yml").read_text(encoding="utf-8")
+    assert "mkdocs gh-deploy" not in text
+    assert "actions/upload-pages-artifact@" in text
+    assert "actions/deploy-pages@" in text
