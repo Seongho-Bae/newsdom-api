@@ -25,5 +25,6 @@ def test_installation_doc_uses_quoted_extras_and_clear_python_wording():
     text = Path("manual/installation.md").read_text(encoding="utf-8")
     assert "Required: `>=3.10, <3.14`" in text
     assert "Recommended: `python3.10`" in text
+    assert "python3.10 -m venv .venv" in text
     assert 'pip install -e ".[dev]"' in text
     assert 'pip install "mineru[pipeline]==3.0.9"' in text

@@ -19,7 +19,7 @@
 
 ```bash
 # 가상 환경 생성 (권장 예시: python3.10)
-python3 -m venv .venv
+python3.10 -m venv .venv
 
 # 가상 환경 활성화
 # macOS / Linux
