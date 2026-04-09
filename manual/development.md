@@ -67,7 +67,7 @@ python tools/derive_private_baseline.py tests/fixtures/private_page_baseline.jso
   - `schemas.py`: Pydantic 기반 DOM 데이터 직렬화 모델 (`PageNode`, `ArticleNode` 등)
   - `service.py`: 비즈니스 로직. PDF 업로드를 받고 파서를 거쳐 DOM 빌더로 연결
   - `mineru_runner.py`: Python `subprocess`로 외부 `mineru` CLI 엔진 파이프라인 구동 및 JSON 로딩
-  - `dom_builder.py`: MinerU의 선형 OCR 데이터를 트기 구조의 DOM으로 재구성
+  - `dom_builder.py`: MinerU의 선형 OCR 데이터를 트리 구조의 DOM으로 재구성
   - `synthetic.py`: 합성 더미 PDF 및 픽스처 생성 엔진
 - **`tests/`**: 단위/통합 테스트 코드와 커밋이 허용된 합성 픽스처(`fixtures/`) 보관소
 - **`tools/`**: `derive_private_baseline.py` 등 개발자용 로컬 스크립트 모음

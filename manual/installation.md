@@ -4,7 +4,7 @@
 
 ## 🛠️ 시스템 요구사항
 
-- **Python**: `>=3.10, <3.14` 필수 (`python3.10` 강력 권장)
+- **Python**: Required: `>=3.10, <3.14` / Recommended: `python3.10`
 - **운영체제**: Linux 또는 macOS 권장 (윈도우의 경우 WSL2 사용 권장)
 - **하드웨어 (GPU)**: `MinerU` 딥러닝 기반 파이프라인을 구동하기 위해서는 최소 **8GB 이상의 RAM**이 필요하며, 실시간 처리를 위해 **NVIDIA GPU(CUDA 11.x/12.x 호환)** 및 `PyTorch` 환경이 권장됩니다.
 - **의존성 (Python)**:
@@ -18,8 +18,8 @@
 가장 간단한 형태로 파이썬 가상환경(Virtual Environment)을 생성하고 패키지를 설치합니다. 이 모드에서는 실제 `MinerU` 모델이 로드되지 않으며, `pytest`나 합성 픽스처(Synthetic Fixtures) 기반 테스트 용도로 적합합니다.
 
 ```bash
-# 가상 환경 생성 (파이썬 3.10 필수)
-python3.10 -m venv .venv
+# 가상 환경 생성 (권장 예시: python3.10)
+python3 -m venv .venv
 
 # 가상 환경 활성화
 # macOS / Linux
@@ -31,18 +31,18 @@ source .venv/bin/activate
 python -m pip install --upgrade pip
 
 # 의존성 패키지와 함께 개발 모드로 설치
-pip install -e .[dev]
+pip install -e ".[dev]"
 ```
 
 ---
 
 ## 2. MinerU 백엔드 포함 실제 파싱 모드 설치
 
-`MinerU` 백엔드를 사용하여 실제 스캔된 일본어 신문 PDF 파싱 작업을 수행하려면 `[parser]` 선택 옵션을 추가로 설치해야 합니다.
+`MinerU` 백엔드를 사용하여 실제 스캔된 일본어 신문 PDF 파싱 작업을 수행하려면 MinerU CLI를 별도로 설치해야 합니다.
 
 ```bash
-# 파서 모듈까지 모두 포함하여 설치
-pip install -e .[parser]
+# MinerU 파이프라인 CLI 설치
+pip install "mineru[pipeline]==3.0.9"
 ```
 
 이 명령어를 통해 **`mineru[pipeline]==3.0.9`** 버전이 설치되며 딥러닝 기반 모델을 위한 준비가 완료됩니다. 설치 후 처음 API 서버를 구동하고 PDF를 파싱할 때 모델(Weight) 파일을 백그라운드에서 다운로드할 수 있으므로, 첫 실행에는 다운로드 대기 시간이 발생할 수 있습니다.
