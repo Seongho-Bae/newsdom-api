@@ -1,5 +1,7 @@
 from pathlib import Path
 
+import yaml
+
 
 def test_dockerfile_exists():
     assert Path("Dockerfile").exists()
@@ -54,8 +56,19 @@ def test_readme_documents_docker_build_and_run():
 
 
 def test_container_image_workflow_exists_for_ghcr_release():
-    text = Path(".github/workflows/container-image.yml").read_text(encoding="utf-8")
-    assert "ghcr.io" in text
-    assert "docker/build-push-action@" in text
-    assert "linux/amd64,linux/arm64" in text
-    assert "Dockerfile.nvidia" in text
+    data = yaml.safe_load(
+        Path(".github/workflows/container-image.yml").read_text(encoding="utf-8")
+    )
+    assert data["jobs"]["image"]["env"]["REGISTRY"] == "ghcr.io"
+    assert (
+        data["jobs"]["image"]["steps"][4]["uses"]
+        == "docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8"
+    )
+    assert (
+        data["jobs"]["image"]["steps"][4]["with"]["platforms"]
+        == "linux/amd64,linux/arm64"
+    )
+    assert (
+        data["jobs"]["image-nvidia"]["steps"][4]["with"]["file"]
+        == "./Dockerfile.nvidia"
+    )
