@@ -20,10 +20,10 @@ source .venv/bin/activate
 pip install -e .[dev]
 ```
 
-To enable real parsing with MinerU:
+To enable real parsing with MinerU, install the MinerU CLI separately in the environment that will execute parsing:
 
 ```bash
-pip install -e .[parser]
+pip install "mineru[pipeline]==3.0.9"
 ```
 
 ### Run
@@ -55,6 +55,10 @@ This repository ships only synthetic test fixtures and derived structural baseli
 Development setup, fixture handling rules, and local-only baseline maintenance are documented in `CONTRIBUTING.md`.
 
 Security reporting guidance is documented in `SECURITY.md`.
+
+Version tags trigger a GitHub-native release workflow that builds distribution artifacts, checksums, and provenance attestations.
+
+Project history is tracked in `CHANGELOG.md`.
 
 Repository branch workflow is documented in `docs/workflow/git-flow.md`.
 

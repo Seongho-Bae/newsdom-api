@@ -11,7 +11,7 @@ pip install -e .[dev]
 Install the parser stack only when you need live MinerU execution:
 
 ```bash
-pip install -e .[parser]
+pip install "mineru[pipeline]==3.0.9"
 ```
 
 ## Test commands
@@ -21,6 +21,10 @@ pytest
 PYTHONWARNINGS=error pytest
 pytest --cov=src/newsdom_api --cov-report=term-missing --cov-fail-under=100
 ```
+
+CI installs dependencies from `uv.lock`, and workflow actions are pinned by immutable commit SHA. Keep both policies intact when editing `.github/` automation.
+
+Tagged releases use `.github/workflows/release.yml` to build artifacts, generate SHA256 checksums, emit a JSON manifest, and publish a GitHub Release with provenance attestation.
 
 ## Fixture policy
 
