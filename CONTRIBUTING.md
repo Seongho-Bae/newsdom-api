@@ -5,7 +5,7 @@
 ```bash
 python3.10 -m venv .venv
 source .venv/bin/activate
-pip install -e .[dev]
+pip install -e ".[dev]"
 ```
 
 Install the parser stack only when you need live MinerU execution:

@@ -17,7 +17,7 @@ NewsDOM API parses scanned Japanese newspaper PDFs into DOM-like article trees.
 ```bash
 python3.10 -m venv .venv
 source .venv/bin/activate
-pip install -e .[dev]
+pip install -e ".[dev]"
 ```
 
 To enable real parsing with MinerU, install the MinerU CLI separately in the environment that will execute parsing:
