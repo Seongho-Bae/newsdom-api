@@ -27,6 +27,11 @@ def test_clusterfuzzlite_workflow_runs_pinned_python_code_change_fuzzing():
     assert "fuzz-seconds: 300" in text
 
 
+def test_clusterfuzzlite_dockerfile_places_build_script_at_src_root():
+    text = Path(".clusterfuzzlite/Dockerfile").read_text(encoding="utf-8")
+    assert "COPY .clusterfuzzlite/build.sh /src/build.sh" in text
+
+
 def test_dom_builder_fuzzer_smoke_mode_runs_without_cluster():
     completed = subprocess.run(
         [
