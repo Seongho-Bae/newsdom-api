@@ -11,7 +11,10 @@ def _iter_workflow_paths(workflow_dir: Path | None = None) -> list[Path]:
 
 
 def _is_pinned_action_line(line: str) -> bool:
-    return bool(PINNED_ACTION_RE.fullmatch(line.split("#", 1)[0].rstrip()))
+    candidate = line.split("#", 1)[0].rstrip()
+    if candidate.startswith("uses: ./") or candidate.startswith("- uses: ./"):
+        return True
+    return bool(PINNED_ACTION_RE.fullmatch(candidate))
 
 
 def _has_pull_request_branch_filter(text: str) -> bool:
@@ -113,8 +116,16 @@ def test_docs_workflow_installs_docs_tooling_from_locked_uv_dependencies():
 def test_docs_workflow_uses_pages_artifact_deploy_path():
     text = Path(".github/workflows/gh-pages.yml").read_text(encoding="utf-8")
     assert "mkdocs gh-deploy" not in text
-    assert "actions/upload-pages-artifact@" in text
+    assert "./.github/actions/upload-pages-artifact" in text
+    assert "actions/upload-pages-artifact@" not in text
     assert "actions/deploy-pages@" in text
+
+
+def test_local_pages_artifact_action_uses_node24_upload_artifact():
+    text = Path(".github/actions/upload-pages-artifact/action.yml").read_text(
+        encoding="utf-8"
+    )
+    assert "actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f" in text
 
 
 def test_quality_gate_workflow_pins_uv_version():
