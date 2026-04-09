@@ -43,7 +43,7 @@ curl -X 'POST' \
   -F 'file=@sample.pdf;type=application/pdf'
 ```
 
-#### Python 클라이언트 예제 (`httpx` 또는 `requests`)
+#### Python 클라이언트 예제 (requests)
 
 프론트엔드나 타 백엔드 서버에서 NewsDOM API를 호출하는 일반적인 패턴입니다.
 
@@ -94,11 +94,21 @@ else:
           "images": [
             {
               "path": "extracted_images/page1_img1.jpg",
-              "bbox": { ... },
+              "bbox": {
+                "x0": 120.0,
+                "y0": 320.0,
+                "x1": 420.0,
+                "y1": 560.0
+              },
               "captions": [
                 {
                   "text": "사진 캡션 내용입니다. (image_caption 블록 연결)",
-                  "bbox": { ... }
+                  "bbox": {
+                    "x0": 120.0,
+                    "y0": 565.0,
+                    "x1": 420.0,
+                    "y1": 620.0
+                  }
                 }
               ]
             }

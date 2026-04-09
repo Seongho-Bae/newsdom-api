@@ -17,13 +17,13 @@ NewsDOM API parses scanned Japanese newspaper PDFs into DOM-like article trees.
 ```bash
 python3.10 -m venv .venv
 source .venv/bin/activate
-pip install -e .[dev]
+pip install -e ".[dev]"
 ```
 
-To enable real parsing with MinerU:
+To enable real parsing with MinerU, install the MinerU CLI separately in the environment that will execute parsing:
 
 ```bash
-pip install -e .[parser]
+pip install "mineru[pipeline]==3.0.9"
 ```
 
 ### Run
@@ -44,6 +44,8 @@ curl -F "file=@sample.pdf" http://127.0.0.1:8000/parse
 pytest
 ```
 
+The repository also enforces a `quality-gate` workflow with 100% source coverage and docstring audit coverage.
+
 ## Fixtures and provenance
 
 This repository ships only synthetic test fixtures and derived structural baselines. For fixture provenance and regeneration notes, see `tests/fixtures/README.md`.
@@ -51,6 +53,11 @@ This repository ships only synthetic test fixtures and derived structural baseli
 ## Development
 
 Development setup, fixture handling rules, and local-only baseline maintenance are documented in `CONTRIBUTING.md`.
+
+Security reporting guidance is documented in `SECURITY.md`.
+Version tags trigger a GitHub-native release workflow that builds distribution artifacts, checksums, and provenance attestations.
+
+Project history is tracked in `CHANGELOG.md`.
 
 Repository branch workflow is documented in `docs/workflow/git-flow.md`.
 
