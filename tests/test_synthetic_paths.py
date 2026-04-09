@@ -8,6 +8,7 @@ from newsdom_api import synthetic
 def test_load_font_falls_back_to_default(monkeypatch):
     sentinel = object()
     monkeypatch.setattr(synthetic, "_font_candidates", lambda: ["/does/not/exist.ttf"])
+    monkeypatch.setattr(synthetic.Path, "exists", lambda self: False)
     monkeypatch.setattr(synthetic.ImageFont, "load_default", lambda: sentinel)
     font = synthetic._load_font(12)
     assert font is sentinel
@@ -15,12 +16,18 @@ def test_load_font_falls_back_to_default(monkeypatch):
 
 def test_load_font_uses_first_existing_candidate(monkeypatch):
     sentinel = object()
+    called = {}
     monkeypatch.setattr(synthetic, "_font_candidates", lambda: ["/pretend/font.ttf"])
     monkeypatch.setattr(synthetic.Path, "exists", lambda self: True)
-    monkeypatch.setattr(
-        synthetic.ImageFont, "truetype", lambda candidate, size: sentinel
-    )
+
+    def fake_truetype(candidate, size):
+        called["candidate"] = candidate
+        called["size"] = size
+        return sentinel
+
+    monkeypatch.setattr(synthetic.ImageFont, "truetype", fake_truetype)
     assert synthetic._load_font(14) is sentinel
+    assert called == {"candidate": "/pretend/font.ttf", "size": 14}
 
 
 def test_draw_vertical_columns_stops_when_width_exhausted(monkeypatch):
