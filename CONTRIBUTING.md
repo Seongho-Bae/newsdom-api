@@ -24,6 +24,8 @@ pytest --cov=src/newsdom_api --cov-report=term-missing --cov-fail-under=100
 
 CI installs dependencies from `uv.lock`, and workflow actions are pinned by immutable commit SHA. Keep both policies intact when editing `.github/` automation.
 
+Tagged releases use `.github/workflows/release.yml` to build artifacts, generate SHA256 checksums, emit a JSON manifest, and publish a GitHub Release with provenance attestation.
+
 ## Fixture policy
 
 This project intentionally separates public test artifacts from private validation material.
