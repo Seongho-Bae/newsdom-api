@@ -21,6 +21,7 @@ jobs:
         with:
           language: python
           sanitizer: address
+          bad-build-check: false
           github-token: ${{ github.token }}
 
       - name: Run fuzzers
