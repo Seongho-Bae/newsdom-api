@@ -134,6 +134,20 @@ def test_quality_gate_workflow_pins_uv_version():
     assert "version: '0.11.3'" in text
 
 
+def test_tests_workflow_pins_uv_version():
+    text = Path(".github/workflows/tests.yml").read_text(encoding="utf-8")
+    assert "astral-sh/setup-uv@" in text
+    assert "version: '0.11.3'" in text
+
+
+def test_docs_workflow_paths_cover_lockfile_and_local_action_inputs():
+    text = Path(".github/workflows/gh-pages.yml").read_text(encoding="utf-8")
+    push_section = text.split("workflow_dispatch:", 1)[0]
+    assert "- 'pyproject.toml'" in push_section
+    assert "- 'uv.lock'" in push_section
+    assert "- '.github/actions/upload-pages-artifact/**'" in push_section
+
+
 def test_iter_workflow_paths_includes_yaml_extension(tmp_path: Path):
     workflow_dir = tmp_path / ".github" / "workflows"
     workflow_dir.mkdir(parents=True)
