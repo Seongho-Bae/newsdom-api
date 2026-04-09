@@ -45,7 +45,7 @@ def test_draw_vertical_columns_stops_when_width_exhausted(monkeypatch):
         size = 24
 
     synthetic._draw_vertical_columns(draw, (0, 0, 40, 120), "ABCDEFGHIJKL", Font())
-    assert 0 < len(x_calls) < 50
+    assert x_calls == [16]
 
 
 def test_generate_fixture_supports_horizontal_article_branch(
