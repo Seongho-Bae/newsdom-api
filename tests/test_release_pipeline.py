@@ -65,3 +65,12 @@ def test_release_workflow_pins_uv_version():
     text = Path(".github/workflows/release.yml").read_text(encoding="utf-8")
     assert "astral-sh/setup-uv@" in text
     assert "version: '0.11.3'" in text
+
+
+def test_release_workflow_scopes_write_permissions_to_job_level():
+    text = Path(".github/workflows/release.yml").read_text(encoding="utf-8")
+    assert "contents: read" in text.split("jobs:", 1)[0]
+    assert "contents: write" not in text.split("jobs:", 1)[0]
+    assert "contents: write" in text.split("jobs:", 1)[1]
+    assert "attestations: write" in text.split("jobs:", 1)[1]
+    assert "id-token: write" in text.split("jobs:", 1)[1]
