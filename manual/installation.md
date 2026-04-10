@@ -71,6 +71,16 @@ PYTHONWARNINGS=error pytest
 경로와 API 동작까지 확인하려면 서버를 직접 띄운 뒤 수동 API 점검
 단계를 수행하세요.
 
+```bash
+# 별도 터미널에서 API 서버 기동
+python -m uvicorn --app-dir src newsdom_api.main:app --host 0.0.0.0 --port 8000 --reload
+
+# 다른 터미널에서 상태 확인
+curl -sS http://127.0.0.1:8000/health
+```
+
+정상 응답 예시는 `{"status": "ok"}`이며 HTTP 200 상태 코드를 반환해야 합니다.
+
 모든 테스트(`tests/`)가 성공적으로 통과했다면 API 서버를 실행할
 준비가 된 것입니다.
 

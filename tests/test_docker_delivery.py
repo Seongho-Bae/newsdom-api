@@ -75,6 +75,10 @@ def test_container_image_workflow_exists_for_ghcr_release():
     data = yaml.safe_load(
         Path(".github/workflows/container-image.yml").read_text(encoding="utf-8")
     )
+    assert (
+        data["jobs"]["image-nvidia"]["if"]
+        == "github.event_name == 'workflow_dispatch' && github.event.inputs.publish_nvidia == 'true'"
+    )
     image_steps = data["jobs"]["image"]["steps"]
     image_build_step = next(
         step

@@ -1,6 +1,6 @@
 # Main Stable Sync Implementation Plan
 
-> **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
+> Execute this plan task-by-task.
 
 **Goal:** Backport the release-hardening, Docker delivery, and fuzzing changes needed for the next stable `main` release without merging the whole `develop` branch.
 

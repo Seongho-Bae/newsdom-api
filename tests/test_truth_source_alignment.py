@@ -173,3 +173,9 @@ def test_stale_issue_reference_detector_ignores_longer_issue_numbers() -> None:
     assert not _contains_stale_issue_reference(
         "Superseded by #100 and issue #101 in a later release plan."
     )
+
+
+def test_main_stable_sync_plan_stays_tool_neutral() -> None:
+    text = Path("docs/plans/2026-04-10-main-stable-sync.md").read_text(encoding="utf-8")
+    assert "For Claude:" not in text
+    assert "superpowers:executing-plans" not in text

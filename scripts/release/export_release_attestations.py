@@ -9,6 +9,9 @@ import subprocess
 from pathlib import Path
 
 
+ATTESTATION_DOWNLOAD_TIMEOUT_SECONDS = 120
+
+
 def _bundle_candidates(working_dir: Path, digest: str) -> tuple[Path, Path]:
     """Return possible attestation bundle filenames for a given digest."""
 
@@ -48,11 +51,18 @@ def export_attestations(
             continue
 
         artifact_path = artifact.resolve()
-        subprocess.run(
-            [gh_bin, "attestation", "download", str(artifact_path), "-R", repo],
-            check=True,
-            cwd=working_dir,
-        )
+        try:
+            subprocess.run(
+                [gh_bin, "attestation", "download", str(artifact_path), "-R", repo],
+                check=True,
+                cwd=working_dir,
+                timeout=ATTESTATION_DOWNLOAD_TIMEOUT_SECONDS,
+            )
+        except subprocess.TimeoutExpired as exc:
+            raise RuntimeError(
+                "Timed out downloading attestation bundle for "
+                f"{artifact.name} after {ATTESTATION_DOWNLOAD_TIMEOUT_SECONDS} seconds"
+            ) from exc
 
         digest = _sha256_file(artifact)
         bundle_path = next(

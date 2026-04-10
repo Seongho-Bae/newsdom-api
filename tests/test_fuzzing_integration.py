@@ -71,6 +71,12 @@ def test_clusterfuzzlite_build_script_iterates_fuzzers_with_null_delimited_find(
     assert "for fuzzer in $(find fuzzers -name '*_fuzzer.py')" not in text
 
 
+def test_clusterfuzzlite_build_script_fails_when_no_fuzzers_are_found():
+    text = Path(".clusterfuzzlite/build.sh").read_text(encoding="utf-8")
+    assert "No *_fuzzer.py files found under fuzzers/" in text
+    assert "exit 1" in text
+
+
 def test_dom_builder_fuzzer_forwards_libfuzzer_args(monkeypatch):
     module = _load_dom_builder_fuzzer_module()
     observed = {}

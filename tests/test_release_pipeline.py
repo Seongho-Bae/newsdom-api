@@ -1,7 +1,18 @@
 import hashlib
 import json
+import subprocess
 from pathlib import Path
 import re
+
+import pytest
+import yaml
+
+
+def _release_workflow_steps() -> list[dict]:
+    workflow = yaml.safe_load(
+        Path(".github/workflows/release.yml").read_text(encoding="utf-8")
+    )
+    return workflow["jobs"]["release"]["steps"]
 
 
 def test_release_workflow_exists():
@@ -85,13 +96,18 @@ def test_release_workflow_scopes_write_permissions_to_job_level():
 
 
 def test_release_workflow_uploads_intoto_assets_with_release_artifacts():
-    text = Path(".github/workflows/release.yml").read_text(encoding="utf-8")
-    assert "dist/*.intoto.jsonl" in text
+    upload_step = next(
+        step
+        for step in _release_workflow_steps()
+        if step.get("name") == "Upload release artifacts"
+    )
+
+    assert "dist/*.intoto.jsonl" in upload_step["with"]["path"]
 
 
 def test_release_workflow_exports_attestations_before_uploading_artifacts():
-    text = Path(".github/workflows/release.yml").read_text(encoding="utf-8")
-    assert text.index("Export release attestation bundles") < text.index(
+    step_names = [step.get("name") for step in _release_workflow_steps()]
+    assert step_names.index("Export release attestation bundles") < step_names.index(
         "Upload release artifacts"
     )
 
@@ -108,7 +124,10 @@ def test_release_attestation_export_script_hashes_artifacts_in_chunks(tmp_path: 
 def test_release_attestation_export_script_writes_named_intoto_files(
     tmp_path: Path, monkeypatch
 ):
-    from scripts.release.export_release_attestations import export_attestations
+    from scripts.release.export_release_attestations import (
+        ATTESTATION_DOWNLOAD_TIMEOUT_SECONDS,
+        export_attestations,
+    )
 
     dist = tmp_path / "dist"
     dist.mkdir()
@@ -119,16 +138,17 @@ def test_release_attestation_export_script_writes_named_intoto_files(
     downloaded = tmp_path / f"sha256:{digest}.jsonl"
     downloaded.write_text('{"bundle": true}', encoding="utf-8")
 
-    calls: list[tuple[list[str], Path]] = []
+    calls: list[tuple[list[str], Path, int]] = []
     monkeypatch.setattr(
         "scripts.release.export_release_attestations.shutil.which",
         lambda name: "/usr/bin/gh" if name == "gh" else None,
     )
 
-    def fake_run(cmd, check, cwd):
-        calls.append((cmd, cwd))
+    def fake_run(cmd, check, cwd, timeout):
+        calls.append((cmd, cwd, timeout))
         assert check is True
         assert cwd == tmp_path
+        assert timeout == ATTESTATION_DOWNLOAD_TIMEOUT_SECONDS
 
     monkeypatch.setattr(
         "scripts.release.export_release_attestations.subprocess.run", fake_run
@@ -147,8 +167,35 @@ def test_release_attestation_export_script_writes_named_intoto_files(
                 "Seongho-Bae/newsdom-api",
             ],
             tmp_path,
+            ATTESTATION_DOWNLOAD_TIMEOUT_SECONDS,
         )
     ]
     assert (dist / "demo.whl.intoto.jsonl").read_text(
         encoding="utf-8"
     ) == '{"bundle": true}'
+
+
+def test_release_attestation_export_script_fails_fast_on_download_timeout(
+    tmp_path: Path, monkeypatch
+):
+    from scripts.release.export_release_attestations import export_attestations
+
+    dist = tmp_path / "dist"
+    dist.mkdir()
+    artifact = dist / "demo.whl"
+    artifact.write_text("demo", encoding="utf-8")
+
+    monkeypatch.setattr(
+        "scripts.release.export_release_attestations.shutil.which",
+        lambda name: "/usr/bin/gh" if name == "gh" else None,
+    )
+
+    def fake_run(cmd, check, cwd, timeout):
+        raise subprocess.TimeoutExpired(cmd=cmd, timeout=timeout)
+
+    monkeypatch.setattr(
+        "scripts.release.export_release_attestations.subprocess.run", fake_run
+    )
+
+    with pytest.raises(RuntimeError, match=r"demo\.whl"):
+        export_attestations(dist, "Seongho-Bae/newsdom-api", working_dir=tmp_path)
