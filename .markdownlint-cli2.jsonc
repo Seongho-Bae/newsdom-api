@@ -1,0 +1,10 @@
+{
+  "ignores": [
+    "docs/plans/2026-04-08-git-flow-design.md",
+    "docs/plans/2026-04-08-git-flow.md",
+    "docs/plans/2026-04-08-newsdom-design.md",
+    "docs/plans/2026-04-08-newsdom-implementation.md",
+    "docs/plans/2026-04-08-quality-gate-design.md",
+    "docs/plans/2026-04-08-quality-gate.md"
+  ]
+}
