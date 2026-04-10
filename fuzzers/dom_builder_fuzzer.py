@@ -8,7 +8,11 @@ import sys
 from pathlib import Path
 from typing import Any
 
-from newsdom_api.dom_builder import build_dom
+SRC_ROOT = Path(__file__).resolve().parents[1] / "src"
+if str(SRC_ROOT) not in sys.path:
+    sys.path.insert(0, str(SRC_ROOT))
+
+from newsdom_api.dom_builder import build_dom  # noqa: E402
 
 
 def _coerce_content_list(candidate: Any) -> list[dict[str, Any]]:
