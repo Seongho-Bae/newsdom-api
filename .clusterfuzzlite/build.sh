@@ -6,8 +6,8 @@ cd "$SRC/newsdom-api"
 uv sync --frozen --extra fuzz
 export PATH="$SRC/newsdom-api/.venv/bin:$PATH"
 
-for fuzzer in $(find fuzzers -name '*_fuzzer.py'); do
-	fuzzer_basename=$(basename -s .py "$fuzzer")
+while IFS= read -r -d '' fuzzer; do
+	fuzzer_basename=$(basename "$fuzzer" .py)
 	fuzzer_package="${fuzzer_basename}.pkg"
 
 	pyinstaller --distpath "$OUT" --onefile --name "$fuzzer_package" "$fuzzer"
@@ -18,4 +18,4 @@ this_dir=\$(dirname "\$0")
 exec "\$this_dir/$fuzzer_package" "\$@"
 EOF
 	chmod +x "$OUT/$fuzzer_basename"
-done
+done < <(find fuzzers -type f -name '*_fuzzer.py' -print0)

@@ -44,6 +44,13 @@ def test_clusterfuzzlite_build_script_uses_locked_uv_fuzz_extra():
     assert "pip3 install . pyinstaller atheris" not in text
 
 
+def test_clusterfuzzlite_build_script_iterates_fuzzers_safely() -> None:
+    text = Path(".clusterfuzzlite/build.sh").read_text(encoding="utf-8")
+    assert "find fuzzers -type f -name '*_fuzzer.py' -print0" in text
+    assert "while IFS= read -r -d '' fuzzer; do" in text
+    assert "for fuzzer in $(find" not in text
+
+
 def test_dom_builder_fuzzer_smoke_mode_runs_without_cluster():
     completed = subprocess.run(
         [
