@@ -32,5 +32,9 @@ We will **defer** OpenSSF Best Practices badge enrollment until after:
 
 ## Follow-up
 
-- Revisit enrollment after issue #8 and issue #10 are resolved.
-- If the repository still intends to pursue the badge at that time, assign an owner and complete the OpenSSF questionnaire.
+- Revisit enrollment after the blocked protected-branch PR stack has merged,
+  the first provenance-backed stable release has shipped, and reviewer
+  capacity exists beyond the sole author/admin account.
+- If the repository still intends to pursue the badge at that time, assign an
+  owner, link the active release and reviewer-capacity issues, and complete
+  the OpenSSF questionnaire.
