@@ -3,6 +3,16 @@ from pathlib import Path
 import yaml
 
 
+def _load_container_image_workflow() -> dict:
+    return yaml.safe_load(
+        Path(".github/workflows/container-image.yml").read_text(encoding="utf-8")
+    )
+
+
+def _find_step_by_uses(steps: list[dict], uses: str) -> dict:
+    return next(step for step in steps if step.get("uses") == uses)
+
+
 def test_dockerfile_exists():
     assert Path("Dockerfile").exists()
 
@@ -60,9 +70,7 @@ def test_readme_documents_docker_build_and_run():
 
 
 def test_container_image_workflow_sets_up_qemu_for_multi_arch_builds():
-    data = yaml.safe_load(
-        Path(".github/workflows/container-image.yml").read_text(encoding="utf-8")
-    )
+    data = _load_container_image_workflow()
     image_steps = data["jobs"]["image"]["steps"]
     assert any(
         step.get("uses")
@@ -72,26 +80,20 @@ def test_container_image_workflow_sets_up_qemu_for_multi_arch_builds():
 
 
 def test_container_image_workflow_exists_for_ghcr_release():
-    data = yaml.safe_load(
-        Path(".github/workflows/container-image.yml").read_text(encoding="utf-8")
-    )
+    data = _load_container_image_workflow()
     assert (
         data["jobs"]["image-nvidia"]["if"]
         == "github.event_name == 'workflow_dispatch' && github.event.inputs.publish_nvidia == 'true'"
     )
     image_steps = data["jobs"]["image"]["steps"]
-    image_build_step = next(
-        step
-        for step in image_steps
-        if step.get("uses")
-        == "docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8"
+    image_build_step = _find_step_by_uses(
+        image_steps,
+        "docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8",
     )
     nvidia_steps = data["jobs"]["image-nvidia"]["steps"]
-    nvidia_build_step = next(
-        step
-        for step in nvidia_steps
-        if step.get("uses")
-        == "docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8"
+    nvidia_build_step = _find_step_by_uses(
+        nvidia_steps,
+        "docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8",
     )
 
     assert data["jobs"]["image"]["env"]["REGISTRY"] == "ghcr.io"

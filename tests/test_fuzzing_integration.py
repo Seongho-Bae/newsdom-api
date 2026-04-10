@@ -8,9 +8,10 @@ import pytest
 
 
 def _load_dom_builder_fuzzer_module():
+    repo_root = Path(__file__).resolve().parents[1]
     spec = importlib.util.spec_from_file_location(
         "test_dom_builder_fuzzer",
-        Path("fuzzers/dom_builder_fuzzer.py"),
+        repo_root / "fuzzers/dom_builder_fuzzer.py",
     )
     assert spec is not None
     assert spec.loader is not None
@@ -75,6 +76,16 @@ def test_clusterfuzzlite_build_script_fails_when_no_fuzzers_are_found():
     text = Path(".clusterfuzzlite/build.sh").read_text(encoding="utf-8")
     assert "No *_fuzzer.py files found under fuzzers/" in text
     assert "exit 1" in text
+
+
+def test_dom_builder_fuzzer_loader_uses_path_relative_to_test_file(
+    monkeypatch, tmp_path: Path
+):
+    monkeypatch.chdir(tmp_path)
+
+    module = _load_dom_builder_fuzzer_module()
+
+    assert Path(module.__file__).name == "dom_builder_fuzzer.py"
 
 
 def test_dom_builder_fuzzer_forwards_libfuzzer_args(monkeypatch):

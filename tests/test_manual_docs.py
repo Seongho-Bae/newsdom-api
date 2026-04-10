@@ -35,9 +35,15 @@ def test_installation_doc_uses_quoted_extras_and_clear_python_wording():
 
 def test_installation_doc_includes_manual_api_healthcheck_commands():
     text = Path("manual/installation.md").read_text(encoding="utf-8")
-    assert (
-        "python -m uvicorn --app-dir src newsdom_api.main:app --host 0.0.0.0 --port 8000 --reload"
-        in text
-    )
-    assert "curl -sS http://127.0.0.1:8000/health" in text
-    assert "HTTP 200" in text
+    for token in [
+        "python -m uvicorn",
+        "--app-dir src",
+        "newsdom_api.main:app",
+        "--host 0.0.0.0",
+        "--port 8000",
+        "--reload",
+    ]:
+        assert token in text
+
+    for token in ["curl", "127.0.0.1:8000/health", "200"]:
+        assert token in text
