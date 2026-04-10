@@ -36,6 +36,12 @@ The GitHub Pages workflow installs documentation tooling from
 sync all extras so the docs build does not drop the test toolchain
 from the active environment.
 
+The supported docs toolchain stays on the MkDocs 1.x line for now.
+Keep `mkdocs<2.0` and `mkdocs-material<9.7` in place until the
+upstream Material team publishes a workable migration path or this
+repository validates a replacement docs stack. `uv.lock` is the source
+of truth for the currently supported docs build.
+
 ```bash
 uv sync --frozen --all-extras
 uv run mkdocs build --strict
