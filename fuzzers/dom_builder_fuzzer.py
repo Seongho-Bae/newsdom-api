@@ -44,11 +44,14 @@ def _run_smoke(seed_path: Path) -> None:
 def main(argv: list[str] | None = None) -> int:
     """Run either deterministic smoke mode or Atheris fuzz mode."""
 
+    raw_argv = list(sys.argv[1:] if argv is None else argv)
     parser = argparse.ArgumentParser()
     parser.add_argument("--smoke", type=Path)
-    args = parser.parse_args(argv)
+    args, fuzz_args = parser.parse_known_args(raw_argv)
 
     if args.smoke is not None:
+        if fuzz_args:
+            parser.error(f"unrecognized arguments: {' '.join(fuzz_args)}")
         _run_smoke(args.smoke)
         return 0
 
@@ -57,7 +60,8 @@ def main(argv: list[str] | None = None) -> int:
     def test_one_input(data: bytes) -> None:
         exercise_dom_builder(data)
 
-    atheris.Setup(sys.argv, test_one_input)
+    program_name = sys.argv[0] if argv is None else Path(__file__).name
+    atheris.Setup([program_name, *fuzz_args], test_one_input)
     atheris.Fuzz()
     return 0
 
