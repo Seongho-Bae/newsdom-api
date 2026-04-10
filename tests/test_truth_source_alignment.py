@@ -54,3 +54,14 @@ def test_adr_follow_up_drops_stale_issue_references() -> None:
     )
     assert "#8" not in text
     assert "#10" not in text
+
+
+def test_public_docs_drop_stale_pip_setup_examples() -> None:
+    for path in [
+        Path("README.md"),
+        Path("CONTRIBUTING.md"),
+        Path("manual/installation.md"),
+    ]:
+        text = path.read_text(encoding="utf-8")
+        assert 'pip install -e ".[dev]"' not in text, path
+        assert "python3.10 -m venv .venv" not in text, path

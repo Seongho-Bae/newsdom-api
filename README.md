@@ -15,23 +15,26 @@ NewsDOM API parses scanned Japanese newspaper PDFs into DOM-like article trees.
 
 ### Install
 
+Install `uv` first if it is not already available in your `PATH`, then sync the
+repository-managed virtual environment:
+
 ```bash
-python3.10 -m venv .venv
-source .venv/bin/activate
-pip install -e ".[dev]"
+uv sync --frozen --all-extras
 ```
 
 To enable real parsing with MinerU, install the MinerU CLI separately in the
-environment that will execute parsing:
+same `.venv` that `uv sync` created:
 
 ```bash
-pip install "mineru[pipeline]==3.0.9"
+uv pip install --python .venv/bin/python "mineru[pipeline]==3.0.9"
 ```
+
+On Windows, replace `.venv/bin/python` with `.venv\Scripts\python.exe`.
 
 ### Run
 
 ```bash
-uvicorn --app-dir src newsdom_api.main:app --reload
+uv run uvicorn --app-dir src newsdom_api.main:app --reload
 ```
 
 ### Docker
@@ -75,13 +78,13 @@ curl -F "file=@sample.pdf" http://127.0.0.1:8000/parse
 ### Run tests
 
 ```bash
-pytest
+uv run pytest
 ```
 
 ### Fuzzing smoke
 
 ```bash
-python fuzzers/dom_builder_fuzzer.py --smoke tests/fixtures/mineru_sample.json
+uv run python fuzzers/dom_builder_fuzzer.py --smoke tests/fixtures/mineru_sample.json
 ```
 
 The repository also enforces a `quality-gate` workflow with 100% source

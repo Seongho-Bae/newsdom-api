@@ -2,24 +2,27 @@
 
 ## Development setup
 
+Install `uv` first if it is not already available in your `PATH`, then sync the
+repository-managed virtual environment:
+
 ```bash
-python3.10 -m venv .venv
-source .venv/bin/activate
-pip install -e ".[dev]"
+uv sync --frozen --all-extras
 ```
 
 Install the parser stack only when you need live MinerU execution:
 
 ```bash
-pip install "mineru[pipeline]==3.0.9"
+uv pip install --python .venv/bin/python "mineru[pipeline]==3.0.9"
 ```
+
+On Windows, replace `.venv/bin/python` with `.venv\Scripts\python.exe`.
 
 ## Test commands
 
 ```bash
-pytest
-PYTHONWARNINGS=error pytest
-pytest --cov=src/newsdom_api --cov-branch --cov-report=term-missing --cov-fail-under=100
+uv run pytest
+PYTHONWARNINGS=error uv run pytest
+uv run pytest --cov=src/newsdom_api --cov-branch --cov-report=term-missing --cov-fail-under=100
 ```
 
 CI installs dependencies from `uv.lock`, and workflow actions are
