@@ -27,6 +27,8 @@ dev = [
   "httpx>=0.28,<1.0",
   "pyyaml>=6.0,<7.0",
 ]
+# Hold the docs toolchain below MkDocs 2.0 until a supported migration path
+# is available for the current Material-based manual stack.
 docs = [
     "mkdocs>=1.6,<2.0",
     "mkdocs-material>=9.6,<9.7",
