@@ -110,11 +110,12 @@ def test_release_attestation_export_script_writes_named_intoto_files(
     downloaded = tmp_path / f"sha256:{digest}.jsonl"
     downloaded.write_text('{"bundle": true}', encoding="utf-8")
 
-    calls: list[list[str]] = []
+    calls: list[tuple[list[str], Path]] = []
 
-    def fake_run(cmd, check):
-        calls.append(cmd)
+    def fake_run(cmd, check, cwd):
+        calls.append((cmd, cwd))
         assert check is True
+        assert cwd == tmp_path
 
     monkeypatch.setattr(
         "scripts.release.export_release_attestations.subprocess.run", fake_run
@@ -123,14 +124,17 @@ def test_release_attestation_export_script_writes_named_intoto_files(
     export_attestations(dist, "Seongho-Bae/newsdom-api", working_dir=tmp_path)
 
     assert calls == [
-        [
-            "gh",
-            "attestation",
-            "download",
-            str(artifact),
-            "-R",
-            "Seongho-Bae/newsdom-api",
-        ]
+        (
+            [
+                "gh",
+                "attestation",
+                "download",
+                str(artifact.resolve()),
+                "-R",
+                "Seongho-Bae/newsdom-api",
+            ],
+            tmp_path,
+        )
     ]
     assert (dist / "demo.whl.intoto.jsonl").read_text(
         encoding="utf-8"

@@ -34,9 +34,11 @@ def export_attestations(
         if artifact.name.endswith(".intoto.jsonl"):
             continue
 
+        artifact_path = artifact.resolve()
         subprocess.run(
-            ["gh", "attestation", "download", str(artifact), "-R", repo],
+            ["gh", "attestation", "download", str(artifact_path), "-R", repo],
             check=True,
+            cwd=working_dir,
         )
 
         digest = hashlib.sha256(artifact.read_bytes()).hexdigest()

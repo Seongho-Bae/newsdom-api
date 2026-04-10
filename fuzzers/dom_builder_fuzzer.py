@@ -25,7 +25,7 @@ def exercise_dom_builder(raw_bytes: bytes) -> None:
     try:
         decoded = raw_bytes.decode("utf-8", errors="ignore")
         candidate = json.loads(decoded)
-    except Exception:
+    except json.JSONDecodeError:
         return
     build_dom(_coerce_content_list(candidate), document_id="fuzz")
 

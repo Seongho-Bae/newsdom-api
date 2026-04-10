@@ -64,6 +64,13 @@ def test_clusterfuzzlite_build_script_marks_wrapper_as_discoverable_fuzz_target(
     assert r'chmod +x "\$this_dir/$fuzzer_package"' in text
 
 
+def test_clusterfuzzlite_build_script_iterates_fuzzers_with_null_delimited_find():
+    text = Path(".clusterfuzzlite/build.sh").read_text(encoding="utf-8")
+    assert "find fuzzers -type f -name '*_fuzzer.py' -print0" in text
+    assert "while IFS= read -r -d '' fuzzer; do" in text
+    assert "for fuzzer in $(find fuzzers -name '*_fuzzer.py')" not in text
+
+
 def test_dom_builder_fuzzer_forwards_libfuzzer_args(monkeypatch):
     module = _load_dom_builder_fuzzer_module()
     observed = {}
@@ -82,6 +89,18 @@ def test_dom_builder_fuzzer_forwards_libfuzzer_args(monkeypatch):
     assert observed["fuzz_called"] is True
 
 
+def test_dom_builder_fuzzer_only_swallows_json_decode_errors(monkeypatch):
+    module = _load_dom_builder_fuzzer_module()
+
+    def raise_runtime_error(_: str):
+        raise RuntimeError("boom")
+
+    monkeypatch.setattr(module.json, "loads", raise_runtime_error)
+
+    with pytest.raises(RuntimeError, match="boom"):
+        module.exercise_dom_builder(b"[]")
+
+
 def test_dom_builder_fuzzer_rejects_fuzz_args_in_smoke_mode():
     module = _load_dom_builder_fuzzer_module()
 
@@ -92,16 +111,21 @@ def test_dom_builder_fuzzer_rejects_fuzz_args_in_smoke_mode():
 
 
 def test_dom_builder_fuzzer_smoke_mode_runs_without_cluster():
-    completed = subprocess.run(
-        [
-            sys.executable,
-            "fuzzers/dom_builder_fuzzer.py",
-            "--smoke",
-            "tests/fixtures/mineru_sample.json",
-        ],
-        capture_output=True,
-        text=True,
-        check=False,
-    )
+    try:
+        completed = subprocess.run(
+            [
+                sys.executable,
+                "fuzzers/dom_builder_fuzzer.py",
+                "--smoke",
+                "tests/fixtures/mineru_sample.json",
+            ],
+            capture_output=True,
+            text=True,
+            check=False,
+            timeout=30,
+        )
+    except subprocess.TimeoutExpired as exc:
+        raise AssertionError("smoke-mode fuzzer subprocess timed out") from exc
+
     assert completed.returncode == 0, completed.stderr
     assert "Traceback" not in completed.stderr

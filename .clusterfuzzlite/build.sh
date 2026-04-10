@@ -6,7 +6,7 @@ cd "$SRC/newsdom-api"
 uv sync --frozen --extra fuzz
 export PATH="$SRC/newsdom-api/.venv/bin:$PATH"
 
-for fuzzer in $(find fuzzers -name '*_fuzzer.py'); do
+while IFS= read -r -d '' fuzzer; do
 	fuzzer_basename=$(basename -s .py "$fuzzer")
 	fuzzer_package="${fuzzer_basename}.pkg"
 
@@ -18,7 +18,7 @@ for fuzzer in $(find fuzzers -name '*_fuzzer.py'); do
 # LLVMFuzzerTestOneInput for fuzzer detection.
 this_dir=\$(dirname "\$0")
 chmod +x "\$this_dir/$fuzzer_package"
-exec "\$this_dir/$fuzzer_package" "\$@"
+	exec "\$this_dir/$fuzzer_package" "\$@"
 EOF
 	chmod +x "$OUT/$fuzzer_basename"
-done
+done < <(find fuzzers -type f -name '*_fuzzer.py' -print0)
