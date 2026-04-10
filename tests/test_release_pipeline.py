@@ -12,10 +12,18 @@ def test_release_workflow_mentions_attestation_and_checksums():
     text = Path(".github/workflows/release.yml").read_text(encoding="utf-8")
     assert "uses: actions/attest-build-provenance@" in text
     assert re.search(r"sha256sum dist/\* > dist/SHA256SUMS.txt", text)
+    assert (
+        'python scripts/release/export_release_attestations.py dist "${GITHUB_REPOSITORY}"'
+        in text
+    )
 
 
 def test_release_manifest_script_exists():
     assert Path("scripts/release/build_release_manifest.py").exists()
+
+
+def test_release_attestation_export_script_exists():
+    assert Path("scripts/release/export_release_attestations.py").exists()
 
 
 def test_release_manifest_script_outputs_json(tmp_path: Path):
@@ -74,3 +82,56 @@ def test_release_workflow_scopes_write_permissions_to_job_level():
     assert "contents: write" in text.split("jobs:", 1)[1]
     assert "attestations: write" in text.split("jobs:", 1)[1]
     assert "id-token: write" in text.split("jobs:", 1)[1]
+
+
+def test_release_workflow_uploads_intoto_assets_with_release_artifacts():
+    text = Path(".github/workflows/release.yml").read_text(encoding="utf-8")
+    assert "dist/*.intoto.jsonl" in text
+
+
+def test_release_workflow_exports_attestations_before_uploading_artifacts():
+    text = Path(".github/workflows/release.yml").read_text(encoding="utf-8")
+    assert text.index("Export release attestation bundles") < text.index(
+        "Upload release artifacts"
+    )
+
+
+def test_release_attestation_export_script_writes_named_intoto_files(
+    tmp_path: Path, monkeypatch
+):
+    from scripts.release.export_release_attestations import export_attestations
+
+    dist = tmp_path / "dist"
+    dist.mkdir()
+    artifact = dist / "demo.whl"
+    artifact.write_text("demo", encoding="utf-8")
+
+    digest = hashlib.sha256(artifact.read_bytes()).hexdigest()
+    downloaded = tmp_path / f"sha256:{digest}.jsonl"
+    downloaded.write_text('{"bundle": true}', encoding="utf-8")
+
+    calls: list[list[str]] = []
+
+    def fake_run(cmd, check):
+        calls.append(cmd)
+        assert check is True
+
+    monkeypatch.setattr(
+        "scripts.release.export_release_attestations.subprocess.run", fake_run
+    )
+
+    export_attestations(dist, "Seongho-Bae/newsdom-api", working_dir=tmp_path)
+
+    assert calls == [
+        [
+            "gh",
+            "attestation",
+            "download",
+            str(artifact),
+            "-R",
+            "Seongho-Bae/newsdom-api",
+        ]
+    ]
+    assert (dist / "demo.whl.intoto.jsonl").read_text(
+        encoding="utf-8"
+    ) == '{"bundle": true}'

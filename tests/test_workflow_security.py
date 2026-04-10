@@ -1,7 +1,6 @@
 import re
 from pathlib import Path
 
-
 PINNED_ACTION_RE = re.compile(r"(?:-\s+)?uses:\s+[\w./-]+@[0-9a-f]{40}")
 
 
@@ -50,9 +49,9 @@ def test_workflow_actions_are_pinned_by_sha():
         for line in text.splitlines():
             stripped = line.strip()
             if stripped.startswith("uses:") or stripped.startswith("- uses:"):
-                assert _is_pinned_action_line(stripped), (
-                    f"unpinned action in {workflow_path}: {stripped}"
-                )
+                assert _is_pinned_action_line(
+                    stripped
+                ), f"unpinned action in {workflow_path}: {stripped}"
 
 
 def test_ci_workflows_do_not_use_pip_install_commands():
@@ -85,9 +84,9 @@ def test_coverage_config_enables_branch_coverage():
 def test_ci_workflows_run_for_all_pull_requests():
     for workflow_path in _iter_workflow_paths():
         text = workflow_path.read_text(encoding="utf-8")
-        assert not _has_pull_request_branch_filter(text), (
-            f"pull_request branch filter blocks stacked PR checks in {workflow_path}"
-        )
+        assert not _has_pull_request_branch_filter(
+            text
+        ), f"pull_request branch filter blocks stacked PR checks in {workflow_path}"
 
 
 def test_docs_workflow_uses_least_privilege_pages_permissions():
@@ -132,6 +131,20 @@ def test_quality_gate_workflow_pins_uv_version():
     text = Path(".github/workflows/quality-gate.yml").read_text(encoding="utf-8")
     assert "astral-sh/setup-uv@" in text
     assert "version: '0.11.3'" in text
+
+
+def test_tests_workflow_pins_uv_version():
+    text = Path(".github/workflows/tests.yml").read_text(encoding="utf-8")
+    assert "astral-sh/setup-uv@" in text
+    assert "version: '0.11.3'" in text
+
+
+def test_docs_workflow_paths_cover_lockfile_and_local_action_inputs():
+    text = Path(".github/workflows/gh-pages.yml").read_text(encoding="utf-8")
+    push_section = text.split("workflow_dispatch:", 1)[0]
+    assert "- 'pyproject.toml'" in push_section
+    assert "- 'uv.lock'" in push_section
+    assert "- '.github/actions/upload-pages-artifact/**'" in push_section
 
 
 def test_iter_workflow_paths_includes_yaml_extension(tmp_path: Path):
