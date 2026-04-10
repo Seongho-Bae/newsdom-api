@@ -1,3 +1,6 @@
+from __future__ import annotations
+
+import ast
 import re
 from pathlib import Path
 
@@ -16,13 +19,49 @@ def _integration_marked_test_exists() -> bool:
         if test_path.name == Path(__file__).name:
             continue
         text = test_path.read_text(encoding="utf-8")
-        if INTEGRATION_MARK_RE.search(text):
+        literal_spans = _literal_string_spans(text)
+        for match in INTEGRATION_MARK_RE.finditer(text):
+            if _offset_in_literal_spans(match.start(), literal_spans):
+                continue
             return True
     return False
 
 
 def _contains_stale_issue_reference(text: str) -> bool:
     return any(pattern.search(text) for pattern in STALE_ISSUE_REFS)
+
+
+def _literal_string_spans(text: str) -> list[tuple[int, int]]:
+    try:
+        tree = ast.parse(text)
+    except SyntaxError:
+        return []
+
+    line_offsets: list[int] = []
+    offset = 0
+    for line in text.splitlines(keepends=True):
+        line_offsets.append(offset)
+        offset += len(line)
+
+    def absolute_offset(lineno: int, col_offset: int) -> int:
+        return line_offsets[lineno - 1] + col_offset
+
+    spans: list[tuple[int, int]] = []
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Constant) and isinstance(node.value, str):
+            if node.end_lineno is None or node.end_col_offset is None:
+                continue
+            spans.append(
+                (
+                    absolute_offset(node.lineno, node.col_offset),
+                    absolute_offset(node.end_lineno, node.end_col_offset),
+                )
+            )
+    return spans
+
+
+def _offset_in_literal_spans(offset: int, spans: list[tuple[int, int]]) -> bool:
+    return any(start <= offset < end for start, end in spans)
 
 
 def test_integration_marker_detector_accepts_list_style_pytestmark(
@@ -52,6 +91,20 @@ def test_integration_marker_detector_scans_nested_tests(
     monkeypatch.setattr(Path, "rglob", lambda self, pattern: [candidate])
 
     assert _integration_marked_test_exists()
+
+
+def test_integration_marker_detector_ignores_string_literal_matches(
+    monkeypatch, tmp_path: Path
+) -> None:
+    candidate = tmp_path / "test_literal_only.py"
+    candidate.write_text(
+        'EXAMPLE = """\n@pytest.mark.integration\nDocumented here only.\n"""\n',
+        encoding="utf-8",
+    )
+
+    monkeypatch.setattr(Path, "rglob", lambda self, pattern: [candidate])
+
+    assert not _integration_marked_test_exists()
 
 
 def test_installation_manual_does_not_reference_empty_integration_marker() -> None:

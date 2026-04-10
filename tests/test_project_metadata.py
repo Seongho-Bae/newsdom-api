@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from pathlib import Path
 
 
@@ -5,7 +7,38 @@ def _dependencies_section(text: str) -> str:
     marker = "dependencies = ["
     if marker not in text:
         raise AssertionError("pyproject.toml is missing a project dependencies section")
-    return text.split(marker, 1)[1].split("]", 1)[0]
+
+    start = text.index(marker) + len(marker)
+    bracket_depth = 1
+    in_string = False
+    escape = False
+
+    for index in range(start, len(text)):
+        char = text[index]
+
+        if in_string:
+            if escape:
+                escape = False
+                continue
+            if char == "\\":
+                escape = True
+                continue
+            if char == '"':
+                in_string = False
+            continue
+
+        if char == '"':
+            in_string = True
+            continue
+        if char == "[":
+            bracket_depth += 1
+            continue
+        if char == "]":
+            bracket_depth -= 1
+            if bracket_depth == 0:
+                return text[start:index]
+
+    raise AssertionError("pyproject.toml dependencies array is not properly closed")
 
 
 def test_dependencies_section_reports_missing_marker_clearly():
@@ -15,6 +48,15 @@ def test_dependencies_section_reports_missing_marker_clearly():
         assert str(exc) == "pyproject.toml is missing a project dependencies section"
     else:
         raise AssertionError("expected missing dependencies marker assertion")
+
+
+def test_dependencies_section_handles_dependency_extras_safely():
+    text = '[project]\ndependencies = [\n  "example[docs]>=1.0",\n  "plain>=2.0",\n]\n'
+
+    section = _dependencies_section(text)
+
+    assert '"example[docs]>=1.0"' in section
+    assert '"plain>=2.0"' in section
 
 
 def test_project_metadata_does_not_bundle_mineru_extra():
