@@ -1,6 +1,22 @@
+import importlib.util
 import subprocess
 import sys
+from types import SimpleNamespace
 from pathlib import Path
+
+import pytest
+
+
+def _load_dom_builder_fuzzer_module():
+    spec = importlib.util.spec_from_file_location(
+        "test_dom_builder_fuzzer",
+        Path("fuzzers/dom_builder_fuzzer.py"),
+    )
+    assert spec is not None
+    assert spec.loader is not None
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
 
 
 def test_clusterfuzzlite_integration_files_exist():
@@ -46,6 +62,33 @@ def test_clusterfuzzlite_build_script_marks_wrapper_as_discoverable_fuzz_target(
     assert 'chmod -x "$OUT/$fuzzer_package"' in text
     assert "LLVMFuzzerTestOneInput for fuzzer detection." in text
     assert r'chmod +x "\$this_dir/$fuzzer_package"' in text
+
+
+def test_dom_builder_fuzzer_forwards_libfuzzer_args(monkeypatch):
+    module = _load_dom_builder_fuzzer_module()
+    observed = {}
+
+    fake_atheris = SimpleNamespace(
+        Setup=lambda argv, callback: observed.update(
+            argv=list(argv), callback=callback
+        ),
+        Fuzz=lambda: observed.update(fuzz_called=True),
+    )
+    monkeypatch.setitem(sys.modules, "atheris", fake_atheris)
+    monkeypatch.setattr(sys, "argv", ["dom_builder_fuzzer", "--", "-runs=4"])
+
+    assert module.main(["--", "-runs=4", "-seed=1337"]) == 0
+    assert observed["argv"] == ["dom_builder_fuzzer", "-runs=4", "-seed=1337"]
+    assert observed["fuzz_called"] is True
+
+
+def test_dom_builder_fuzzer_rejects_fuzz_args_in_smoke_mode():
+    module = _load_dom_builder_fuzzer_module()
+
+    with pytest.raises(SystemExit) as excinfo:
+        module.main(["--smoke", "tests/fixtures/mineru_sample.json", "--", "-runs=4"])
+
+    assert excinfo.value.code == 2
 
 
 def test_dom_builder_fuzzer_smoke_mode_runs_without_cluster():
