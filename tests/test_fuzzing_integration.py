@@ -41,6 +41,13 @@ def test_clusterfuzzlite_build_script_uses_locked_uv_fuzz_extra():
     assert "pip3 install . pyinstaller atheris" not in text
 
 
+def test_clusterfuzzlite_build_script_marks_wrapper_as_discoverable_fuzz_target():
+    text = Path(".clusterfuzzlite/build.sh").read_text(encoding="utf-8")
+    assert 'chmod -x "$OUT/$fuzzer_package"' in text
+    assert "LLVMFuzzerTestOneInput for fuzzer detection." in text
+    assert r'chmod +x "\$this_dir/$fuzzer_package"' in text
+
+
 def test_dom_builder_fuzzer_smoke_mode_runs_without_cluster():
     completed = subprocess.run(
         [

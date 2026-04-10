@@ -11,10 +11,13 @@ for fuzzer in $(find fuzzers -name '*_fuzzer.py'); do
 	fuzzer_package="${fuzzer_basename}.pkg"
 
 	pyinstaller --distpath "$OUT" --onefile --name "$fuzzer_package" "$fuzzer"
+	chmod -x "$OUT/$fuzzer_package"
 
 	cat >"$OUT/$fuzzer_basename" <<EOF
 #!/bin/sh
+# LLVMFuzzerTestOneInput for fuzzer detection.
 this_dir=\$(dirname "\$0")
+chmod +x "\$this_dir/$fuzzer_package"
 exec "\$this_dir/$fuzzer_package" "\$@"
 EOF
 	chmod +x "$OUT/$fuzzer_basename"
