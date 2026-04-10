@@ -1,6 +1,7 @@
 # Git Flow
 
-This repository uses a manual classic Git Flow model implemented with GitHub branches and pull requests.
+This repository uses a manual classic Git Flow model implemented with
+GitHub branches and pull requests.
 
 ## Branch roles
 
@@ -9,8 +10,10 @@ This repository uses a manual classic Git Flow model implemented with GitHub bra
 - `feature/<topic>`: new work cut from `develop`, merged back into `develop`
 - `fix/<topic>`: non-release fixes cut from `develop`, merged back into `develop`
 - `chore/<topic>`: maintenance work cut from `develop`, merged back into `develop`
-- `release/vX.Y.Z`: release hardening branch cut from `develop`, merged into `main` and back into `develop`
-- `hotfix/<topic>`: urgent production fix cut from `main`, merged into `main` and back into `develop`
+- `release/vX.Y.Z`: release hardening branch cut from `develop`,
+  merged into `main` and back into `develop`
+- `hotfix/<topic>`: urgent production fix cut from `main`,
+  merged into `main` and back into `develop`
 
 ## Daily workflow
 
@@ -42,6 +45,9 @@ This repository uses a manual classic Git Flow model implemented with GitHub bra
 
 ## Notes
 
-- This rollout intentionally avoids `git flow init` and any git config mutation.
-- The branch model is enforced by repository convention, GitHub default-branch settings, and pull request guidance.
-- `main` and `develop` are intended to be protected branches with pull-request-based updates and CI checks.
+- This rollout intentionally avoids `git flow init` and any git
+  config mutation.
+- The branch model is enforced by repository convention, GitHub
+  default-branch settings, and pull request guidance.
+- `main` and `develop` are intended to be protected branches with
+  pull-request-based updates and CI checks.

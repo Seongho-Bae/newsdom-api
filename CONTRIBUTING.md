@@ -41,6 +41,12 @@ uv sync --frozen --all-extras
 uv run mkdocs build --strict
 ```
 
+Use markdownlint for `AGENTS.md`, `ARCHITECTURE.md`, `CONTRIBUTING.md`,
+and `docs/**/*.md`. The sweep excludes only the legacy
+`git-flow-design`, `git-flow`, `newsdom-design`,
+`newsdom-implementation`, `quality-gate-design`, and `quality-gate`
+planning notes that predate the current markdown style policy.
+
 Tagged releases use `.github/workflows/release.yml` to build
 artifacts, generate SHA256 checksums, emit a JSON manifest, export
 `*.intoto.jsonl` provenance bundles, and publish a GitHub Release with
