@@ -1,7 +1,6 @@
 # Code Scanning Hardening and Manual Screenshots Implementation Plan
 
-> **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to
-> implement this plan task-by-task.
+> Execute this plan task-by-task and verify each step before moving on.
 
 **Goal:** Close the highest-priority executable security and code-scanning
 gaps by hardening repository review protections and CodeQL coverage, then
@@ -126,7 +125,9 @@ Record the desired live conditions:
 
 ### Task 3 Step 2: Run verification to show current gap
 
-Run: `gh api repos/Seongho-Bae/newsdom-api/rulesets/14875805`
+Run: `gh api repos/Seongho-Bae/newsdom-api/rulesets` and capture the `id` for
+the `mirror-classic-protection-main-develop` ruleset, then query
+`gh api repos/Seongho-Bae/newsdom-api/rulesets/<id>`.
 
 Expected: JSON shows `required_approving_review_count` is `1` and
 `require_code_owner_review` is `false`.
@@ -139,7 +140,8 @@ path in `manual/development.md`.
 
 ### Task 3 Step 4: Run verification to prove it passes
 
-Run: `gh api repos/Seongho-Bae/newsdom-api/rulesets/14875805`
+Run: `gh api repos/Seongho-Bae/newsdom-api/rulesets/<id>` using the resolved
+ruleset identifier from the previous step.
 
 Expected: JSON shows `required_approving_review_count` is `2`,
 `require_code_owner_review` is `true`, and `require_last_push_approval`

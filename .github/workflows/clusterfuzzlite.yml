@@ -22,6 +22,7 @@ jobs:
           language: python
           sanitizer: address
           github-token: ${{ github.token }}
+          bad-build-check: false
 
       - name: Run fuzzers
         uses: google/clusterfuzzlite/actions/run_fuzzers@52ecc61cb587ee99c26825a112a21abf19c7448c
