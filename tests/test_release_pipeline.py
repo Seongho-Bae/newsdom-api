@@ -96,6 +96,15 @@ def test_release_workflow_exports_attestations_before_uploading_artifacts():
     )
 
 
+def test_release_attestation_export_script_hashes_artifacts_in_chunks(tmp_path: Path):
+    from scripts.release.export_release_attestations import _sha256_file
+
+    artifact = tmp_path / "demo.bin"
+    artifact.write_bytes(b"newsdom-" * 4096)
+
+    assert _sha256_file(artifact) == hashlib.sha256(artifact.read_bytes()).hexdigest()
+
+
 def test_release_attestation_export_script_writes_named_intoto_files(
     tmp_path: Path, monkeypatch
 ):
@@ -111,6 +120,10 @@ def test_release_attestation_export_script_writes_named_intoto_files(
     downloaded.write_text('{"bundle": true}', encoding="utf-8")
 
     calls: list[tuple[list[str], Path]] = []
+    monkeypatch.setattr(
+        "scripts.release.export_release_attestations.shutil.which",
+        lambda name: "/usr/bin/gh" if name == "gh" else None,
+    )
 
     def fake_run(cmd, check, cwd):
         calls.append((cmd, cwd))
@@ -126,7 +139,7 @@ def test_release_attestation_export_script_writes_named_intoto_files(
     assert calls == [
         (
             [
-                "gh",
+                "/usr/bin/gh",
                 "attestation",
                 "download",
                 str(artifact.resolve()),
