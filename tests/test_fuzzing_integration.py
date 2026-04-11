@@ -6,12 +6,17 @@ from pathlib import Path
 
 import pytest
 
+REPO_ROOT = Path(__file__).resolve().parents[1]
+
+
+def _repo_path(*parts: str) -> Path:
+    return REPO_ROOT.joinpath(*parts)
+
 
 def _load_dom_builder_fuzzer_module():
-    repo_root = Path(__file__).resolve().parents[1]
     spec = importlib.util.spec_from_file_location(
         "test_dom_builder_fuzzer",
-        repo_root / "fuzzers/dom_builder_fuzzer.py",
+        _repo_path("fuzzers", "dom_builder_fuzzer.py"),
     )
     assert spec is not None
     assert spec.loader is not None
@@ -20,17 +25,23 @@ def _load_dom_builder_fuzzer_module():
     return module
 
 
-def test_clusterfuzzlite_integration_files_exist():
-    assert Path(".clusterfuzzlite/project.yaml").exists()
-    assert Path(".clusterfuzzlite/Dockerfile").exists()
-    assert Path(".clusterfuzzlite/build.sh").exists()
-    assert Path(".github/workflows/clusterfuzzlite.yml").exists()
-    assert Path("fuzzers/dom_builder_fuzzer.py").exists()
-    assert Path("fuzzers/corpus/dom_builder_fuzzer/mineru_sample.json").exists()
+def test_clusterfuzzlite_integration_files_exist(monkeypatch, tmp_path: Path):
+    monkeypatch.chdir(tmp_path)
+
+    assert _repo_path(".clusterfuzzlite", "project.yaml").exists()
+    assert _repo_path(".clusterfuzzlite", "Dockerfile").exists()
+    assert _repo_path(".clusterfuzzlite", "build.sh").exists()
+    assert _repo_path(".github", "workflows", "clusterfuzzlite.yml").exists()
+    assert _repo_path("fuzzers", "dom_builder_fuzzer.py").exists()
+    assert _repo_path(
+        "fuzzers", "corpus", "dom_builder_fuzzer", "mineru_sample.json"
+    ).exists()
 
 
 def test_clusterfuzzlite_workflow_runs_pinned_python_code_change_fuzzing():
-    text = Path(".github/workflows/clusterfuzzlite.yml").read_text(encoding="utf-8")
+    text = _repo_path(".github", "workflows", "clusterfuzzlite.yml").read_text(
+        encoding="utf-8"
+    )
     assert (
         "google/clusterfuzzlite/actions/build_fuzzers@52ecc61cb587ee99c26825a112a21abf19c7448c"
         in text
@@ -46,34 +57,34 @@ def test_clusterfuzzlite_workflow_runs_pinned_python_code_change_fuzzing():
 
 
 def test_clusterfuzzlite_dockerfile_places_build_script_at_src_root():
-    text = Path(".clusterfuzzlite/Dockerfile").read_text(encoding="utf-8")
+    text = _repo_path(".clusterfuzzlite", "Dockerfile").read_text(encoding="utf-8")
     assert "gcr.io/oss-fuzz-base/base-builder-python@sha256:" in text
     assert "ghcr.io/astral-sh/uv@sha256:" in text
     assert "COPY .clusterfuzzlite/build.sh /src/build.sh" in text
 
 
 def test_clusterfuzzlite_build_script_uses_locked_uv_fuzz_extra():
-    text = Path(".clusterfuzzlite/build.sh").read_text(encoding="utf-8")
+    text = _repo_path(".clusterfuzzlite", "build.sh").read_text(encoding="utf-8")
     assert "uv sync --frozen --extra fuzz" in text
     assert "pip3 install . pyinstaller atheris" not in text
 
 
 def test_clusterfuzzlite_build_script_marks_wrapper_as_discoverable_fuzz_target():
-    text = Path(".clusterfuzzlite/build.sh").read_text(encoding="utf-8")
+    text = _repo_path(".clusterfuzzlite", "build.sh").read_text(encoding="utf-8")
     assert 'chmod -x "$OUT/$fuzzer_package"' in text
     assert "LLVMFuzzerTestOneInput for fuzzer detection." in text
     assert r'chmod +x "\$this_dir/$fuzzer_package"' in text
 
 
 def test_clusterfuzzlite_build_script_iterates_fuzzers_with_null_delimited_find():
-    text = Path(".clusterfuzzlite/build.sh").read_text(encoding="utf-8")
+    text = _repo_path(".clusterfuzzlite", "build.sh").read_text(encoding="utf-8")
     assert "find fuzzers -type f -name '*_fuzzer.py' -print0" in text
     assert "while IFS= read -r -d '' fuzzer; do" in text
     assert "for fuzzer in $(find fuzzers -name '*_fuzzer.py')" not in text
 
 
 def test_clusterfuzzlite_build_script_fails_when_no_fuzzers_are_found():
-    text = Path(".clusterfuzzlite/build.sh").read_text(encoding="utf-8")
+    text = _repo_path(".clusterfuzzlite", "build.sh").read_text(encoding="utf-8")
     assert "No *_fuzzer.py files found under fuzzers/" in text
     assert "exit 1" in text
 
@@ -127,14 +138,18 @@ def test_dom_builder_fuzzer_rejects_fuzz_args_in_smoke_mode():
     assert excinfo.value.code == 2
 
 
-def test_dom_builder_fuzzer_smoke_mode_runs_without_cluster():
+def test_dom_builder_fuzzer_smoke_mode_runs_without_cluster(
+    monkeypatch, tmp_path: Path
+):
+    monkeypatch.chdir(tmp_path)
+
     try:
         completed = subprocess.run(
             [
                 sys.executable,
-                "fuzzers/dom_builder_fuzzer.py",
+                str(_repo_path("fuzzers", "dom_builder_fuzzer.py")),
                 "--smoke",
-                "tests/fixtures/mineru_sample.json",
+                str(_repo_path("tests", "fixtures", "mineru_sample.json")),
             ],
             capture_output=True,
             text=True,
