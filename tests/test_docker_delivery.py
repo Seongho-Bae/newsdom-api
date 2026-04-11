@@ -1,6 +1,7 @@
 from pathlib import Path
 
 import pytest
+import re
 import yaml
 
 
@@ -24,6 +25,45 @@ def _dockerignore_entries(text: str) -> set[str]:
     }
 
 
+def _normalize_whitespace(text: str) -> str:
+    return re.sub(r"\s+", " ", text).strip()
+
+
+def _contains_docker_build_command(text: str) -> bool:
+    normalized = _normalize_whitespace(text)
+    return "docker build" in normalized and "-t newsdom-api" in normalized
+
+
+def _contains_docker_run_command(text: str) -> bool:
+    normalized = _normalize_whitespace(text)
+    return (
+        "docker run" in normalized
+        and "-p 8000:8000" in normalized
+        and "newsdom-api" in normalized
+    )
+
+
+def _contains_pinned_python_base_image(text: str) -> bool:
+    return bool(re.search(r"python:3\.12-slim@sha256:[0-9a-f]{64}", text))
+
+
+def _contains_pinned_uv_image(text: str) -> bool:
+    return bool(re.search(r"ghcr\.io/astral-sh/uv@sha256:[0-9a-f]{64}", text))
+
+
+def _contains_copy_or_add_reference(text: str, filename: str) -> bool:
+    return bool(re.search(rf"^\s*(COPY|ADD)\b.*\b{re.escape(filename)}\b", text, re.M))
+
+
+def _contains_healthcheck_path(text: str, path: str) -> bool:
+    match = re.search(
+        r"^HEALTHCHECK\b(?P<body>[\s\S]*?)(?:^[A-Z][A-Z0-9_]*\b|\Z)",
+        text,
+        re.M,
+    )
+    return bool(match and path in match.group("body"))
+
+
 def test_dockerfile_exists():
     assert Path("Dockerfile").exists()
 
@@ -38,11 +78,11 @@ def test_dockerignore_exists():
 
 def test_dockerfile_uses_project_metadata_and_src_layout():
     text = Path("Dockerfile").read_text(encoding="utf-8")
-    assert "pyproject.toml" in text
-    assert "uv.lock" in text
+    assert _contains_copy_or_add_reference(text, "pyproject.toml")
+    assert _contains_copy_or_add_reference(text, "uv.lock")
     assert "src/" in text
-    assert "python:3.12-slim@sha256:" in text
-    assert "ghcr.io/astral-sh/uv@sha256:" in text
+    assert _contains_pinned_python_base_image(text)
+    assert _contains_pinned_uv_image(text)
 
 
 def test_dockerfile_runs_uvicorn_with_healthcheck_and_external_mineru_path():
@@ -53,8 +93,7 @@ def test_dockerfile_runs_uvicorn_with_healthcheck_and_external_mineru_path():
     assert "--host" in text
     assert "0.0.0.0" in text
     assert "8000" in text
-    assert "HEALTHCHECK" in text
-    assert "/health" in text
+    assert _contains_healthcheck_path(text, "/health")
 
 
 def test_nvidia_dockerfile_installs_mineru_pipeline_stack():
@@ -84,11 +123,42 @@ def test_find_step_by_uses_raises_clear_error_for_missing_step():
 
 def test_readme_documents_docker_build_and_run():
     text = Path("README.md").read_text(encoding="utf-8")
-    assert "docker build -t newsdom-api" in text
-    assert "docker run -p 8000:8000 newsdom-api" in text
+    assert _contains_docker_build_command(text)
+    assert _contains_docker_run_command(text)
     assert "Dockerfile.nvidia" in text
     assert "Apple Silicon" in text
     assert "NVIDIA" in text
+
+
+def test_docker_command_matchers_allow_wrapped_whitespace():
+    sample = "docker   build\n  -t   newsdom-api .\n\n docker run   -p 8000:8000\n newsdom-api"
+
+    assert _contains_docker_build_command(sample)
+    assert _contains_docker_run_command(sample)
+
+
+def test_dockerfile_pattern_helpers_match_pinned_images_and_healthcheck():
+    sample = (
+        "ARG PYTHON_BASE=python:3.12-slim@sha256:" + "a" * 64 + "\n"
+        "ARG UV_IMAGE=ghcr.io/astral-sh/uv@sha256:" + "b" * 64 + "\n"
+        "COPY pyproject.toml uv.lock README.md ./\n"
+        'HEALTHCHECK --interval=30s \\\n+  CMD python -c "http://127.0.0.1:8000/health"\n'
+    )
+
+    assert _contains_pinned_python_base_image(sample)
+    assert _contains_pinned_uv_image(sample)
+    assert _contains_copy_or_add_reference(sample, "pyproject.toml")
+    assert _contains_copy_or_add_reference(sample, "uv.lock")
+    assert _contains_healthcheck_path(sample, "/health")
+
+
+def test_healthcheck_path_matcher_ignores_later_unrelated_health_strings():
+    sample = (
+        'HEALTHCHECK CMD python -c "http://127.0.0.1:8000/ping"\n'
+        'CMD ["echo", "/health"]\n'
+    )
+
+    assert not _contains_healthcheck_path(sample, "/health")
 
 
 def test_container_image_workflow_sets_up_qemu_for_multi_arch_builds():
