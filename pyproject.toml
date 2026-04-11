@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "newsdom-api"
-version = "0.1.0"
+version = "0.1.1"
 description = "DOM-style parser API for scanned Japanese newspaper PDFs"
 readme = "README.md"
 requires-python = ">=3.10,<3.14"
@@ -27,6 +27,8 @@ dev = [
   "httpx>=0.28,<1.0",
   "pyyaml>=6.0,<7.0",
 ]
+# Hold the docs toolchain below MkDocs 2.0 until a supported migration path
+# is available for the current Material-based manual stack.
 docs = [
     "mkdocs>=1.6,<2.0",
     "mkdocs-material>=9.6,<9.7",
