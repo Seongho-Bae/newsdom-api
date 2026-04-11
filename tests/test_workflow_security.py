@@ -1,6 +1,7 @@
 import re
 from pathlib import Path
 
+import yaml
 
 PINNED_ACTION_RE = re.compile(r"(?:-\s+)?uses:\s+[\w./-]+@[0-9a-f]{40}")
 
@@ -141,11 +142,16 @@ def test_tests_workflow_pins_uv_version():
 
 
 def test_docs_workflow_paths_cover_lockfile_and_local_action_inputs():
-    text = Path(".github/workflows/gh-pages.yml").read_text(encoding="utf-8")
-    push_section = text.split("workflow_dispatch:", 1)[0]
-    assert "- 'pyproject.toml'" in push_section
-    assert "- 'uv.lock'" in push_section
-    assert "- '.github/actions/upload-pages-artifact/**'" in push_section
+    workflow = yaml.safe_load(
+        Path(".github/workflows/gh-pages.yml").read_text(encoding="utf-8")
+    )
+    triggers = workflow.get("on", workflow.get(True))
+    paths = triggers["push"].get("paths")
+
+    assert paths is not None, "gh-pages push.paths must remain configured"
+    assert "pyproject.toml" in paths
+    assert "uv.lock" in paths
+    assert ".github/actions/upload-pages-artifact/**" in paths
 
 
 def test_iter_workflow_paths_includes_yaml_extension(tmp_path: Path):

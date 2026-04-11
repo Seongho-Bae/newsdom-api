@@ -2,10 +2,11 @@
 
 ## Reporting a vulnerability
 
-Please report a vulnerability privately by opening a GitHub Security Advisory draft for this repository:
+Please report a vulnerability privately by opening a GitHub Security
+Advisory draft for this repository:
 
-- https://github.com/Seongho-Bae/newsdom-api/security/advisories/new
-- https://github.com/seonghobae
+- [GitHub Security Advisory draft](https://github.com/Seongho-Bae/newsdom-api/security/advisories/new)
+- [Maintainer profile](https://github.com/seonghobae)
 
 Do not open a public issue for an unpatched vulnerability.
 
@@ -16,14 +17,16 @@ When reporting, include:
 - impact assessment
 - any proof-of-concept input or sanitized logs needed to reproduce safely
 
-Avoid sending secrets, production credentials, or copyrighted third-party source documents in reports.
+Avoid sending secrets, production credentials, or copyrighted third-party
+source documents in reports.
 
 ## Supported branches
 
 - `develop`: actively maintained integration branch
 - `main`: stable release branch
 
-Security fixes should target the appropriate Git Flow branch and be back-merged when required by `docs/workflow/git-flow.md`.
+Security fixes should target the appropriate Git Flow branch and be
+back-merged when required by `docs/workflow/git-flow.md`.
 
 ## Disclosure expectations
 
@@ -35,4 +38,5 @@ Security fixes should target the appropriate Git Flow branch and be back-merged 
 
 - use synthetic fixtures whenever possible
 - keep private reference inputs out of the repository
-- provide sanitized evidence that preserves reproducibility without exposing sensitive data
+- provide sanitized evidence that preserves reproducibility without exposing
+  sensitive data

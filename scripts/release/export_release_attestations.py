@@ -9,6 +9,9 @@ import subprocess
 from pathlib import Path
 
 
+ATTESTATION_DOWNLOAD_TIMEOUT_SECONDS = 120
+
+
 def _bundle_candidates(working_dir: Path, digest: str) -> tuple[Path, Path]:
     """Return possible attestation bundle filenames for a given digest."""
 
@@ -18,13 +21,14 @@ def _bundle_candidates(working_dir: Path, digest: str) -> tuple[Path, Path]:
     )
 
 
-def _resolve_gh_cli() -> str:
-    """Resolve the GitHub CLI path required for attestation downloads."""
+def _sha256_file(path: Path) -> str:
+    """Return a SHA-256 digest for a file without loading it fully into memory."""
 
-    gh_executable = shutil.which("gh")
-    if gh_executable is None:
-        raise FileNotFoundError("gh CLI is required to export release attestations")
-    return gh_executable
+    digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
 
 
 def export_attestations(
@@ -33,7 +37,9 @@ def export_attestations(
     """Download attestation bundles for release artifacts and rename them for Scorecard."""
 
     working_dir = (working_dir or Path.cwd()).resolve()
-    gh_executable = _resolve_gh_cli()
+    gh_bin = shutil.which("gh")
+    if gh_bin is None:
+        raise FileNotFoundError("gh CLI executable not found in PATH")
     exported: list[Path] = []
 
     for artifact in sorted(dist_dir.iterdir()):
@@ -45,13 +51,20 @@ def export_attestations(
             continue
 
         artifact_path = artifact.resolve()
-        subprocess.run(
-            [gh_executable, "attestation", "download", str(artifact_path), "-R", repo],
-            check=True,
-            cwd=working_dir,
-        )
+        try:
+            subprocess.run(
+                [gh_bin, "attestation", "download", str(artifact_path), "-R", repo],
+                check=True,
+                cwd=working_dir,
+                timeout=ATTESTATION_DOWNLOAD_TIMEOUT_SECONDS,
+            )
+        except subprocess.TimeoutExpired as exc:
+            raise RuntimeError(
+                "Timed out downloading attestation bundle for "
+                f"{artifact.name} after {ATTESTATION_DOWNLOAD_TIMEOUT_SECONDS} seconds"
+            ) from exc
 
-        digest = hashlib.sha256(artifact_path.read_bytes()).hexdigest()
+        digest = _sha256_file(artifact)
         bundle_path = next(
             (
                 candidate

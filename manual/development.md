@@ -1,8 +1,6 @@
 # 개발 및 기여 가이드
 
-이 문서에서는 NewsDOM API의 로컬 개발 방법, 테스트 프레임워크
-(`pytest`), 그리고 매우 중요한 **엄격한 픽스처(Fixture) 관리 및
-브랜치 규칙**을 설명합니다.
+이 문서에서는 NewsDOM API의 로컬 개발 방법, 테스트 프레임워크(`pytest`), 그리고 매우 중요한 **엄격한 픽스처(Fixture) 관리 및 브랜치 규칙**을 설명합니다.
 
 ---
 
@@ -22,19 +20,13 @@
 - 실제 참조 문서(Private Reference Page)에서 추출되거나 복사된 OCR 텍스트 전체
 - 원본 스캔본에서 잘라낸 이미지 크롭(Crop) 조각 파일들
 
-> **주의**: 위 사항들은 `.gitignore` 파일에 등재되어 있다 하더라도,
-> 절대 `git add` 시 실수로 끼워 넣지 않도록 주의해야 합니다. 픽스처
-> 생성 이력 및 재생성에 관한 문서는 `tests/fixtures/README.md`를
-> 참고하십시오.
+> **주의**: 위 사항들은 `.gitignore` 파일에 등재되어 있다 하더라도, 절대 `git add` 시 실수로 끼워 넣지 않도록 주의해야 합니다. 픽스처 생성 이력 및 재생성에 관한 문서는 `tests/fixtures/README.md`를 참고하십시오.
 
 ---
 
 ## 2. 프라이빗 베이스라인 (Private Baseline) 업데이트
 
-로컬 컴퓨터에서 원본 참조 문서(Private Page)를 가지고 비공개로
-파이프라인 또는 모델 성능 개선 테스트를 진행할 경우, **원본 데이터를
-저장소로 올리면 안 되며, 파생된 구조적 베이스라인(JSON)만 갱신해야
-합니다.**
+로컬 컴퓨터에서 원본 참조 문서(Private Page)를 가지고 비공개로 파이프라인/모델 성능 개선 테스트를 진행할 경우, **원본 데이터를 저장소로 올리면 안 되며, 파생된 구조적 베이스라인(JSON)만 갱신해야 합니다.**
 
 로컬 베이스라인 갱신 시 `tools/` 디렉토리에 제공된 전용 스크립트를 사용하십시오:
 
@@ -49,8 +41,7 @@ python tools/derive_private_baseline.py tests/fixtures/private_page_baseline.jso
 
 ## 3. Git 워크플로우 (Branch Model)
 
-이 프로젝트는 `git-flow init`과 같은 플러그인을 쓰지 않는 수동
-**클래식 Git Flow 모델**(`docs/workflow/git-flow.md`)을 강제합니다.
+이 프로젝트는 `git-flow init`과 같은 플러그인을 쓰지 않는 수동 **클래식 Git Flow 모델**(`docs/workflow/git-flow.md`)을 강제합니다.
 
 ### 🌿 브랜치 규칙
 
@@ -61,43 +52,12 @@ python tools/derive_private_baseline.py tests/fixtures/private_page_baseline.jso
   - 작업 완료 후 `develop` 브랜치를 향해 Pull Request를 엽니다.
 - **`release/vX.Y.Z` 브랜치**:
   - 제품 릴리즈 준비 시 `develop`에서 파생합니다.
-  - 릴리즈 및 안정화가 완료되면 `main`에 병합(Merge)한 후 버전을
-    태깅(Tag)하고, 변경 사항을 다시 `develop`으로 백머지(Back-merge)
-    해야 합니다.
+  - 릴리즈 및 안정화가 완료되면 `main`에 병합(Merge)한 후 버전을 태깅(Tag)하고, 변경 사항을 다시 `develop`으로 백머지(Back-merge)해야 합니다.
 - **`hotfix/<topic>` 브랜치**:
   - 운영(Production) 장애 등 긴급 패치 시 `main`에서 파생합니다.
   - 수정 완료 후 `main`과 `develop` 모두에 병합해야 합니다.
 
-모든 작업은 반드시 **Pull Request (PR)** 를 거쳐 병합되어야 하며,
-로컬 저장소 컨벤션과 GitHub 설정(Default-branch protection)으로
-강제됩니다.
-
-### ✅ GitHub 보호 규칙과 단일 유지보수자 예외
-
-`main` 및 `develop` 브랜치에는 GitHub ruleset이 적용되어 있으며, 단순
-관행이 아니라 저장소 설정으로 PR 기반 병합과 보호 규칙을 강제합니다.
-
-- Pull Request를 거치지 않고는 보호 브랜치로 병합할 수 없습니다.
-- 리뷰 스레드가 모두 해결되어야 합니다.
-- 필수 상태 체크로 `pytest`, `scorecard`,
-  `codeql (python, actions)`, `dependency-review`, `quality-gate`가
-  통과해야 합니다.
-- 선형 히스토리, force-push 금지, 브랜치 삭제 금지는 계속 유지됩니다.
-
-현재 저장소는 단일 유지보수자(single-maintainer) 상태이므로, 비작성자
-리뷰어가 없는 동안에는 unsatisfiable한 필수 승인 규칙을 임시 예외로
-운영합니다. 즉, 현재는 `CODEOWNERS`/승인/마지막 푸시 승인을 강제하지
-않지만, 리뷰어 용량이 확보되면 즉시 다시 강화합니다.
-
-- 첫 번째 비작성자 코드 오너가 합류하면 `1명 이상의 비작성자 승인 +
-  CODEOWNERS + 마지막 푸시 승인` 정책으로 되돌립니다.
-- 두 명의 독립 리뷰어가 확보되면 그때 보호 브랜치 기준을 다시 최소
-  **2명의 승인**으로 올립니다.
-
-즉, 워크플로 수정, 문서 변경, 보안 설정 변경을 포함한 모든 사용자 영향
-변경은 지금도 PR과 필수 검증을 통과한 뒤에만 보호 브랜치로 들어가며,
-리뷰 게이트는 reviewer capacity가 현실적으로 만족되는 시점에 다시
-re-tighten합니다.
+모든 작업은 반드시 **Pull Request (PR)** 를 거쳐 병합되어야 하며, 로컬 저장소 컨벤션과 GitHub 설정(Default-branch protection)으로 강제됩니다.
 
 ---
 
