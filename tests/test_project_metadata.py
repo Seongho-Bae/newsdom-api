@@ -18,6 +18,11 @@ def test_project_metadata_does_not_bundle_mineru_extra():
     assert "mineru[pipeline]" not in dependencies_section
 
 
+def test_project_version_is_prepared_for_v0_1_1_release():
+    text = Path("pyproject.toml").read_text(encoding="utf-8")
+    assert 'version = "0.1.1"' in text
+
+
 def test_docs_theme_range_stays_below_warning_release():
     text = Path("pyproject.toml").read_text(encoding="utf-8")
     assert '"mkdocs-material>=9.6,<9.7"' in text
