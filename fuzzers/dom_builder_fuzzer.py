@@ -8,11 +8,7 @@ import sys
 from pathlib import Path
 from typing import Any
 
-SRC_ROOT = Path(__file__).resolve().parents[1] / "src"
-if str(SRC_ROOT) not in sys.path:
-    sys.path.insert(0, str(SRC_ROOT))
-
-from newsdom_api.dom_builder import build_dom  # noqa: E402
+from newsdom_api.dom_builder import build_dom
 
 
 def _coerce_content_list(candidate: Any) -> list[dict[str, Any]]:
@@ -29,7 +25,7 @@ def exercise_dom_builder(raw_bytes: bytes) -> None:
     try:
         decoded = raw_bytes.decode("utf-8", errors="ignore")
         candidate = json.loads(decoded)
-    except Exception:
+    except json.JSONDecodeError:
         return
     build_dom(_coerce_content_list(candidate), document_id="fuzz")
 
@@ -44,14 +40,17 @@ def _run_smoke(seed_path: Path) -> None:
 def main(argv: list[str] | None = None) -> int:
     """Run either deterministic smoke mode or Atheris fuzz mode."""
 
-    raw_argv = list(sys.argv[1:] if argv is None else argv)
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(allow_abbrev=False)
     parser.add_argument("--smoke", type=Path)
-    args, fuzz_args = parser.parse_known_args(raw_argv)
+    raw_argv = list(sys.argv[1:] if argv is None else argv)
+    args, forwarded = parser.parse_known_args(raw_argv)
+
+    if forwarded[:1] == ["--"]:
+        forwarded = forwarded[1:]
 
     if args.smoke is not None:
-        if fuzz_args:
-            parser.error(f"unrecognized arguments: {' '.join(fuzz_args)}")
+        if forwarded:
+            parser.error(f"unrecognized arguments: {' '.join(forwarded)}")
         _run_smoke(args.smoke)
         return 0
 
@@ -60,8 +59,7 @@ def main(argv: list[str] | None = None) -> int:
     def test_one_input(data: bytes) -> None:
         exercise_dom_builder(data)
 
-    program_name = sys.argv[0] if argv is None else Path(__file__).name
-    atheris.Setup([program_name, *fuzz_args], test_one_input)
+    atheris.Setup([sys.argv[0], *forwarded], test_one_input)
     atheris.Fuzz()
     return 0
 

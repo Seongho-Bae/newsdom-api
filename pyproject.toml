@@ -58,3 +58,20 @@ branch = true
 fail_under = 100
 show_missing = true
 skip_covered = false
+
+[tool.mypy]
+python_version = "3.10"
+exclude = "(^tests/|^fuzzers/|^research_repos/)"
+
+[[tool.mypy.overrides]]
+module = [
+  "fastapi",
+  "fastapi.*",
+  "pydantic",
+  "pydantic.*",
+  "PIL",
+  "PIL.*",
+  "reportlab",
+  "reportlab.*",
+]
+ignore_missing_imports = true

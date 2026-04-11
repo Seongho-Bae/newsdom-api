@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from pathlib import Path
 import re
 
@@ -12,9 +14,65 @@ def _locked_package_version(name: str) -> tuple[int, ...]:
     return tuple(int(part) for part in match.group(1).split("."))
 
 
+def _dependencies_section(text: str) -> str:
+    marker = "dependencies = ["
+    if marker not in text:
+        raise AssertionError("pyproject.toml is missing a project dependencies section")
+
+    start = text.index(marker) + len(marker)
+    bracket_depth = 1
+    in_string = False
+    escape = False
+
+    for index in range(start, len(text)):
+        char = text[index]
+
+        if in_string:
+            if escape:
+                escape = False
+                continue
+            if char == "\\":
+                escape = True
+                continue
+            if char == '"':
+                in_string = False
+            continue
+
+        if char == '"':
+            in_string = True
+            continue
+        if char == "[":
+            bracket_depth += 1
+            continue
+        if char == "]":
+            bracket_depth -= 1
+            if bracket_depth == 0:
+                return text[start:index]
+
+    raise AssertionError("pyproject.toml dependencies array is not properly closed")
+
+
+def test_dependencies_section_reports_missing_marker_clearly():
+    try:
+        _dependencies_section("[project]\nname = 'newsdom-api'\n")
+    except AssertionError as exc:
+        assert str(exc) == "pyproject.toml is missing a project dependencies section"
+    else:
+        raise AssertionError("expected missing dependencies marker assertion")
+
+
+def test_dependencies_section_handles_dependency_extras_safely():
+    text = '[project]\ndependencies = [\n  "example[docs]>=1.0",\n  "plain>=2.0",\n]\n'
+
+    section = _dependencies_section(text)
+
+    assert '"example[docs]>=1.0"' in section
+    assert '"plain>=2.0"' in section
+
+
 def test_project_metadata_does_not_bundle_mineru_extra():
     text = Path("pyproject.toml").read_text(encoding="utf-8")
-    dependencies_section = text.split("dependencies = [", 1)[1].split("]", 1)[0]
+    dependencies_section = _dependencies_section(text)
     assert "mineru[pipeline]" not in dependencies_section
 
 
