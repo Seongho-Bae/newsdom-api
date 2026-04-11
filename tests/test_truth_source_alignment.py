@@ -6,7 +6,6 @@ from pathlib import Path
 
 import yaml
 
-
 STALE_ISSUE_REFS = (re.compile(r"(?<!\d)#8(?!\d)"), re.compile(r"(?<!\d)#10(?!\d)"))
 
 
@@ -32,12 +31,8 @@ def _contains_integration_marker(text: str) -> bool:
         return False
 
     for node in tree.body:
-        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
-            if any(
-                _is_integration_mark_expr(decorator)
-                for decorator in node.decorator_list
-            ):
-                return True
+        if _node_has_integration_marker(node):
+            return True
         if isinstance(node, ast.Assign):
             if any(
                 isinstance(target, ast.Name) and target.id == "pytestmark"
@@ -51,6 +46,19 @@ def _contains_integration_marker(text: str) -> bool:
                     node.value
                 ):
                     return True
+    return False
+
+
+def _node_has_integration_marker(node: ast.AST) -> bool:
+    if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
+        if any(
+            _is_integration_mark_expr(decorator) for decorator in node.decorator_list
+        ):
+            return True
+
+    if isinstance(node, ast.ClassDef):
+        return any(_node_has_integration_marker(child) for child in node.body)
+
     return False
 
 
@@ -131,6 +139,18 @@ def test_integration_marker_detector_ignores_string_literal_matches(
     monkeypatch.setattr(Path, "rglob", lambda self, pattern: [candidate])
 
     assert not _integration_marked_test_exists()
+
+
+def test_integration_marker_detector_finds_class_method_marks() -> None:
+    text = (
+        "import pytest\n\n"
+        "class TestExample:\n"
+        "    @pytest.mark.integration\n"
+        "    def test_live(self):\n"
+        "        assert True\n"
+    )
+
+    assert _contains_integration_marker(text)
 
 
 def test_installation_manual_does_not_reference_empty_integration_marker() -> None:

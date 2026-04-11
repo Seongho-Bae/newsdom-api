@@ -10,7 +10,6 @@ site/
 *.pyc
 private/
 tmp/
-site/
 registered_agents.json
 task_agent_mapping.json
 content_file_3982.pdf
