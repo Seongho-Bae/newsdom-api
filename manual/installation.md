@@ -64,11 +64,24 @@ export NEWSDOM_MINERU_BIN="/path/to/custom/mineru"
 ```bash
 # 파이썬 경고(Warning)를 에러로 취급하여 꼼꼼하게 검사
 PYTHONWARNINGS=error pytest
-
-# 통합 테스트 포함 실행 (실제 MinerU CLI 및 다운로드된 모델 파일 필요)
-pytest -m "integration"
 ```
 
-모든 단위 테스트(`tests/`)가 성공적으로 통과했다면 API 서버를 실행할 준비가 된 것입니다.
+현재 저장소에는 별도의 `integration` 마커 테스트 묶음이 없으므로,
+설치 확인의 기준은 기본 `pytest` 스위트 통과입니다. 추가로 MinerU
+경로와 API 동작까지 확인하려면 서버를 직접 띄운 뒤 수동 API 점검
+단계를 수행하세요.
+
+```bash
+# 별도 터미널에서 API 서버 기동
+python -m uvicorn --app-dir src newsdom_api.main:app --host 0.0.0.0 --port 8000 --reload
+
+# 다른 터미널에서 상태 확인
+curl -sS http://127.0.0.1:8000/health
+```
+
+정상 응답 예시는 `{"status": "ok"}`이며 HTTP 200 상태 코드를 반환해야 합니다.
+
+모든 테스트(`tests/`)가 성공적으로 통과했다면 API 서버를 실행할
+준비가 된 것입니다.
 
 👉 다음 단계: **[API 레퍼런스 및 사용 방법](api-reference.md)**

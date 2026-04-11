@@ -4,11 +4,13 @@ on:
   push:
     branches:
       - main
-      - master
       - develop
     paths:
       - 'manual/**'
       - 'mkdocs.yml'
+      - 'pyproject.toml'
+      - 'uv.lock'
+      - '.github/actions/upload-pages-artifact/**'
       - '.github/workflows/gh-pages.yml'
   workflow_dispatch:
 

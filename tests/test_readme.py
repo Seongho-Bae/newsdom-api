@@ -23,6 +23,11 @@ def test_readme_quotes_dev_extra_install_command():
     assert 'pip install -e ".[dev]"' in text
 
 
+def test_readme_mentions_linux_amd64_only_nvidia_path_once():
+    text = Path("README.md").read_text(encoding="utf-8")
+    assert text.count("`linux/amd64`-only") == 1
+
+
 def test_contributing_quotes_dev_extra_install_command():
     text = Path("CONTRIBUTING.md").read_text(encoding="utf-8")
     assert 'pip install -e ".[dev]"' in text

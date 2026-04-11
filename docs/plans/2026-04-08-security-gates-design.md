@@ -35,7 +35,7 @@ Choose **Approach B**.
 
 - `pytest`
 - `scorecard`
-- `codeql (python)`
+- `codeql (python, actions)`
 - `dependency-review`
 
 ## Operational notes

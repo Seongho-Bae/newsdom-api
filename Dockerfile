@@ -1,0 +1,43 @@
+ARG PYTHON_BASE=python:3.12-slim@sha256:5072b08ad74609c5329ab4085a96dfa873de565fb4751a4cfcd7dcc427661df0
+ARG UV_IMAGE=ghcr.io/astral-sh/uv@sha256:90bbb3c16635e9627f49eec6539f956d70746c409209041800a0280b93152823
+
+FROM ${UV_IMAGE} AS uv-bin
+
+FROM ${PYTHON_BASE} AS builder
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1
+
+WORKDIR /app
+
+COPY --from=uv-bin /uv /uvx /bin/
+
+COPY pyproject.toml uv.lock README.md ./
+COPY src/ src/
+
+RUN uv sync --frozen --no-dev
+
+FROM ${PYTHON_BASE} AS runtime
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    NEWSDOM_MINERU_BIN=mineru \
+    PATH="/app/.venv/bin:${PATH}"
+
+WORKDIR /app
+
+RUN useradd --create-home --home-dir /home/newsdom --shell /usr/sbin/nologin newsdom
+
+COPY --from=builder /app /app
+
+RUN chown -R newsdom:newsdom /app
+
+USER newsdom
+
+EXPOSE 8000
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=5 \
+  CMD python -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health').read()"
+
+CMD ["uvicorn", "newsdom_api.main:app", "--host", "0.0.0.0", "--port", "8000"]

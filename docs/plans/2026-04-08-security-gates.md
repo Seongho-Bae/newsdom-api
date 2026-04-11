@@ -30,7 +30,7 @@ Expected: FAIL until the files are added and referenced.
 
 Add the workflows with explicit job names:
 - `scorecard`
-- `codeql (python)`
+- `codeql (python, actions)`
 - `dependency-review`
 
 **Step 4: Run test to verify it passes**
@@ -95,7 +95,7 @@ Run a YAML parser or equivalent check against `.github/workflows/*.yml`.
 Require:
 - `pytest`
 - `scorecard`
-- `codeql (python)`
+- `codeql (python, actions)`
 - `dependency-review`
 
 **Step 2: Update `develop` protection**
