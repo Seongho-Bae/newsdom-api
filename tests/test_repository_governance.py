@@ -79,6 +79,18 @@ def test_development_manual_documents_review_gates() -> None:
         assert phrase in manual_text
 
 
+def test_development_manual_documents_single_maintainer_review_exception() -> None:
+    manual_text = Path("manual/development.md").read_text(encoding="utf-8")
+    for expected in (
+        "단일 유지보수자",
+        "필수 상태 체크",
+        "리뷰어 용량이 확보되면",
+        "비작성자 승인",
+        "CODEOWNERS",
+    ):
+        assert expected in manual_text
+
+
 def test_gitignore_excludes_generated_runtime_artifacts() -> None:
     gitignore_text = Path(".gitignore").read_text(encoding="utf-8")
     active_lines = {

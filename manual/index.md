@@ -16,8 +16,9 @@
 ## 품질 및 보안 게이트
 
 - `main`, `develop` 보호 브랜치는 GitHub ruleset으로 관리됩니다.
-- 병합에는 최소 2명의 승인, `CODEOWNERS` 리뷰,
-  마지막 푸시에 대한 별도 승인이 필요합니다.
+- 현재는 단일 유지보수자 예외로 PR + 필수 상태 체크 + 히스토리 보호를
+  유지하고, reviewer capacity가 생기면 `CODEOWNERS`, 비작성자 승인,
+  마지막 푸시 승인, 그리고 최종적으로 2명의 승인까지 다시 강화합니다.
 - 필수 체크는 `pytest`, `scorecard`,
   `codeql (python, actions)`, `dependency-review`, `quality-gate`입니다.
 - API 웹 콘솔 스크린샷은 실제 로컬 FastAPI 서버(`/docs`, `/redoc`)에서

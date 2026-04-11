@@ -1,6 +1,5 @@
 from pathlib import Path
 
-
 REQUIRED_CANONICAL_DOCS = [
     "AGENTS.md",
     "ARCHITECTURE.md",
@@ -89,6 +88,17 @@ def test_review_policy_covers_review_expectations() -> None:
         "required checks",
         "resolve review comments",
         "stale-review dismissal",
+    ):
+        assert expected in text
+
+
+def test_review_policy_documents_single_maintainer_exception() -> None:
+    text = Path("docs/engineering/review-policy.md").read_text(encoding="utf-8").lower()
+    for expected in (
+        "single-maintainer",
+        "reviewer capacity",
+        "required checks",
+        "re-tighten",
     ):
         assert expected in text
 

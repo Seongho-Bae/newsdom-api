@@ -7,6 +7,20 @@
   small follow-up fixes.
 - Required checks must be green before a PR is considered merge-ready.
 
+## Single-maintainer exception
+
+- If reviewer capacity is limited to the sole author/admin account,
+  do not pretend that non-author approvals or required CODEOWNERS
+  review are satisfiable.
+- In that state, prefer a documented temporary single-maintainer
+  exception that keeps PR flow, required checks, thread resolution,
+  and history protections intact.
+- Re-tighten the ruleset to require at least one non-author approval,
+  CODEOWNERS review, and last-push approval as soon as reviewer
+  capacity exists beyond the sole maintainer.
+- Restore the stronger two-approval policy only when two independent
+  human reviewers are actually available.
+
 ## Thread handling
 
 - Resolve review comments only after the underlying code, docs, or

@@ -72,21 +72,32 @@ python tools/derive_private_baseline.py tests/fixtures/private_page_baseline.jso
 로컬 저장소 컨벤션과 GitHub 설정(Default-branch protection)으로
 강제됩니다.
 
-### ✅ GitHub 보호 규칙과 필수 리뷰 게이트
+### ✅ GitHub 보호 규칙과 단일 유지보수자 예외
 
-`main` 및 `develop` 브랜치에는 GitHub ruleset이 적용되어 있으며, 단순 관행이 아니라 저장소 설정으로 아래 조건을 강제합니다.
+`main` 및 `develop` 브랜치에는 GitHub ruleset이 적용되어 있으며, 단순
+관행이 아니라 저장소 설정으로 PR 기반 병합과 보호 규칙을 강제합니다.
 
-- 최소 **2명의 승인**이 있어야 병합할 수 있습니다.
-- `CODEOWNERS` 기반 리뷰가 필수입니다.
-- **마지막 푸시**에 대해 별도의 승인이 있어야 합니다.
+- Pull Request를 거치지 않고는 보호 브랜치로 병합할 수 없습니다.
 - 리뷰 스레드가 모두 해결되어야 합니다.
 - 필수 상태 체크로 `pytest`, `scorecard`,
   `codeql (python, actions)`, `dependency-review`, `quality-gate`가
   통과해야 합니다.
+- 선형 히스토리, force-push 금지, 브랜치 삭제 금지는 계속 유지됩니다.
 
-즉, 워크플로 수정, 문서 변경, 보안 설정 변경을 포함한 모든 사용자
-영향 변경은 PR과 필수 검증을 통과한 뒤에만 보호 브랜치로 들어갈 수
-있습니다.
+현재 저장소는 단일 유지보수자(single-maintainer) 상태이므로, 비작성자
+리뷰어가 없는 동안에는 unsatisfiable한 필수 승인 규칙을 임시 예외로
+운영합니다. 즉, 현재는 `CODEOWNERS`/승인/마지막 푸시 승인을 강제하지
+않지만, 리뷰어 용량이 확보되면 즉시 다시 강화합니다.
+
+- 첫 번째 비작성자 코드 오너가 합류하면 `1명 이상의 비작성자 승인 +
+  CODEOWNERS + 마지막 푸시 승인` 정책으로 되돌립니다.
+- 두 명의 독립 리뷰어가 확보되면 그때 보호 브랜치 기준을 다시 최소
+  **2명의 승인**으로 올립니다.
+
+즉, 워크플로 수정, 문서 변경, 보안 설정 변경을 포함한 모든 사용자 영향
+변경은 지금도 PR과 필수 검증을 통과한 뒤에만 보호 브랜치로 들어가며,
+리뷰 게이트는 reviewer capacity가 현실적으로 만족되는 시점에 다시
+re-tighten합니다.
 
 ---
 
