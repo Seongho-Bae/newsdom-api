@@ -27,7 +27,7 @@ def test_initial_release_entry_keeps_added_section_and_links():
         in text
     )
     assert (
-        "[Unreleased]: https://github.com/Seongho-Bae/newsdom-api/compare/v0.1.0...HEAD"
+        "[Unreleased]: https://github.com/Seongho-Bae/newsdom-api/compare/v0.1.1...HEAD"
         in text
     )
     assert (
