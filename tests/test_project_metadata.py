@@ -23,6 +23,20 @@ def test_project_version_is_prepared_for_v0_1_1_release():
     assert 'version = "0.1.1"' in text
 
 
+def test_uv_lock_tracks_project_version() -> None:
+    pyproject_text = Path("pyproject.toml").read_text(encoding="utf-8")
+    pyproject_version = re.search(r'^version = "([^"]+)"', pyproject_text, re.MULTILINE)
+    assert pyproject_version is not None
+
+    uv_lock_text = Path("uv.lock").read_text(encoding="utf-8")
+    lock_version = re.search(
+        r'\[\[package\]\]\nname = "newsdom-api"\nversion = "([^"]+)"',
+        uv_lock_text,
+    )
+    assert lock_version is not None
+    assert lock_version.group(1) == pyproject_version.group(1)
+
+
 def test_docs_theme_range_stays_below_warning_release():
     text = Path("pyproject.toml").read_text(encoding="utf-8")
     assert '"mkdocs-material>=9.6,<9.7"' in text
