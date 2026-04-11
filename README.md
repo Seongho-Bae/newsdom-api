@@ -8,28 +8,33 @@ NewsDOM API parses scanned Japanese newspaper PDFs into DOM-like article trees.
 
 - Primary engine: `MinerU` pipeline backend
 - Service wrapper: FastAPI
-- Output: canonical JSON with pages, articles, headlines, body blocks, images, captions, and quality metadata
+- Output: canonical JSON with pages, articles, headlines, body
+  blocks, images, captions, and quality metadata
 
 ## Quickstart
 
 ### Install
 
-```bash
-python3.10 -m venv .venv
-source .venv/bin/activate
-pip install -e ".[dev]"
-```
-
-To enable real parsing with MinerU, install the MinerU CLI separately in the environment that will execute parsing:
+Install `uv` first if it is not already available in your `PATH`, then sync the
+repository-managed virtual environment:
 
 ```bash
-pip install "mineru[pipeline]==3.0.9"
+uv sync --frozen --all-extras
 ```
+
+To enable real parsing with MinerU, install the MinerU CLI separately in the
+same `.venv` that `uv sync` created:
+
+```bash
+uv pip install --python .venv/bin/python "mineru[pipeline]==3.0.9"
+```
+
+On Windows, replace `.venv/bin/python` with `.venv\Scripts\python.exe`.
 
 ### Run
 
 ```bash
-uvicorn newsdom_api.main:app --reload
+uv run uvicorn --app-dir src newsdom_api.main:app --reload
 ```
 
 ### Docker
@@ -39,9 +44,14 @@ docker build -t newsdom-api .
 docker run -p 8000:8000 newsdom-api
 ```
 
-The default image exposes the REST API on port `8000` as a lean multi-arch service image. It is suitable for `linux/amd64` and `linux/arm64`, including Apple Silicon hosts running the API service inside Docker.
+The default image exposes the REST API on port `8000` as a lean multi-arch
+service image. It is suitable for `linux/amd64` and `linux/arm64`, including
+Apple Silicon hosts running the API service inside Docker.
 
-The lean image is intentionally a REST API shell: `/health`, `/docs`, and OpenAPI endpoints are available immediately, while real `/parse` execution still requires a compatible MinerU runtime to be available inside the container image.
+The lean image is intentionally a REST API shell: `/health`, `/docs`, and
+OpenAPI endpoints are available immediately, while real `/parse` execution
+still requires a compatible MinerU runtime to be available inside the
+container image.
 
 For heavier parsing deployments, build the optional NVIDIA-oriented variant:
 
@@ -50,9 +60,14 @@ docker build -f Dockerfile.nvidia -t newsdom-api:nvidia .
 docker run --gpus all -p 8000:8000 newsdom-api:nvidia
 ```
 
-`Dockerfile.nvidia` is intended for Linux/NVIDIA environments and is `linux/amd64`-only. Apple Silicon can run the lean API image, but Docker Desktop does not expose Apple GPU acceleration to Linux containers, so real GPU-accelerated parsing should stay on a native Apple Silicon path instead of the containerized runtime.
+`Dockerfile.nvidia` is intended for Linux/NVIDIA environments and is
+`linux/amd64`-only. Apple Silicon can run the lean API image, but Docker
+Desktop does not expose Apple GPU acceleration to Linux containers, so real
+GPU-accelerated parsing should stay on a native Apple Silicon path instead of
+the containerized runtime.
 
-The NVIDIA variant is `linux/amd64`-only and is meant for hosts that can provide the CUDA user-space/runtime stack required by MinerU.
+The NVIDIA variant is `linux/amd64`-only and is meant for hosts that can
+provide the CUDA user-space/runtime stack required by MinerU.
 
 ### Parse a PDF
 
@@ -63,27 +78,32 @@ curl -F "file=@sample.pdf" http://127.0.0.1:8000/parse
 ### Run tests
 
 ```bash
-pytest
+uv run pytest
 ```
 
 ### Fuzzing smoke
 
 ```bash
-python fuzzers/dom_builder_fuzzer.py --smoke tests/fixtures/mineru_sample.json
+uv run python fuzzers/dom_builder_fuzzer.py --smoke tests/fixtures/mineru_sample.json
 ```
 
-The repository also enforces a `quality-gate` workflow with 100% source coverage and docstring audit coverage.
+The repository also enforces a `quality-gate` workflow with 100% source
+coverage and docstring audit coverage.
 
 ## Fixtures and provenance
 
-This repository ships only synthetic test fixtures and derived structural baselines. For fixture provenance and regeneration notes, see `tests/fixtures/README.md`.
+This repository ships only synthetic test fixtures and derived structural
+baselines. For fixture provenance and regeneration notes, see
+`tests/fixtures/README.md`.
 
 ## Development
 
-Development setup, fixture handling rules, and local-only baseline maintenance are documented in `CONTRIBUTING.md`.
+Development setup, fixture handling rules, and local-only baseline
+maintenance are documented in `CONTRIBUTING.md`.
 
 Security reporting guidance is documented in `SECURITY.md`.
-Version tags trigger a GitHub-native release workflow that builds distribution artifacts, checksums, and provenance attestations.
+Version tags trigger a GitHub-native release workflow that builds
+distribution artifacts, checksums, and provenance attestations.
 
 Project history is tracked in `CHANGELOG.md`.
 

@@ -18,12 +18,22 @@ def _bundle_candidates(working_dir: Path, digest: str) -> tuple[Path, Path]:
     )
 
 
+def _resolve_gh_cli() -> str:
+    """Resolve the GitHub CLI path required for attestation downloads."""
+
+    gh_executable = shutil.which("gh")
+    if gh_executable is None:
+        raise FileNotFoundError("gh CLI is required to export release attestations")
+    return gh_executable
+
+
 def export_attestations(
     dist_dir: Path, repo: str, *, working_dir: Path | None = None
 ) -> list[Path]:
     """Download attestation bundles for release artifacts and rename them for Scorecard."""
 
     working_dir = (working_dir or Path.cwd()).resolve()
+    gh_executable = _resolve_gh_cli()
     exported: list[Path] = []
 
     for artifact in sorted(dist_dir.iterdir()):
@@ -34,12 +44,14 @@ def export_attestations(
         if artifact.name.endswith(".intoto.jsonl"):
             continue
 
+        artifact_path = artifact.resolve()
         subprocess.run(
-            ["gh", "attestation", "download", str(artifact), "-R", repo],
+            [gh_executable, "attestation", "download", str(artifact_path), "-R", repo],
             check=True,
+            cwd=working_dir,
         )
 
-        digest = hashlib.sha256(artifact.read_bytes()).hexdigest()
+        digest = hashlib.sha256(artifact_path.read_bytes()).hexdigest()
         bundle_path = next(
             (
                 candidate

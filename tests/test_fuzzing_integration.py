@@ -1,6 +1,8 @@
+import importlib.util
 import subprocess
 import sys
 from pathlib import Path
+from types import ModuleType
 
 
 def test_clusterfuzzlite_integration_files_exist():
@@ -26,6 +28,7 @@ def test_clusterfuzzlite_workflow_runs_pinned_python_code_change_fuzzing():
     assert "mode: code-change" in text
     assert "fuzz-seconds: 300" in text
     assert "github-token: ${{ github.token }}" in text
+    assert "bad-build-check: false" in text
 
 
 def test_clusterfuzzlite_dockerfile_places_build_script_at_src_root():
@@ -39,6 +42,13 @@ def test_clusterfuzzlite_build_script_uses_locked_uv_fuzz_extra():
     text = Path(".clusterfuzzlite/build.sh").read_text(encoding="utf-8")
     assert "uv sync --frozen --extra fuzz" in text
     assert "pip3 install . pyinstaller atheris" not in text
+
+
+def test_clusterfuzzlite_build_script_iterates_fuzzers_safely() -> None:
+    text = Path(".clusterfuzzlite/build.sh").read_text(encoding="utf-8")
+    assert "find fuzzers -type f -name '*_fuzzer.py' -print0" in text
+    assert "while IFS= read -r -d '' fuzzer; do" in text
+    assert "for fuzzer in $(find" not in text
 
 
 def test_dom_builder_fuzzer_smoke_mode_runs_without_cluster():
@@ -55,3 +65,31 @@ def test_dom_builder_fuzzer_smoke_mode_runs_without_cluster():
     )
     assert completed.returncode == 0, completed.stderr
     assert "Traceback" not in completed.stderr
+
+
+def test_dom_builder_fuzzer_forwards_libfuzzer_flags_to_atheris(monkeypatch):
+    module_path = Path("fuzzers/dom_builder_fuzzer.py")
+    spec = importlib.util.spec_from_file_location("dom_builder_fuzzer", module_path)
+    assert spec is not None and spec.loader is not None
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+
+    fake_atheris = ModuleType("atheris")
+    captured: dict[str, object] = {}
+
+    def fake_setup(argv, callback):
+        captured["argv"] = argv
+        captured["callback"] = callback
+
+    def fake_fuzz():
+        captured["fuzz_called"] = True
+
+    fake_atheris.Setup = fake_setup
+    fake_atheris.Fuzz = fake_fuzz
+    monkeypatch.setitem(sys.modules, "atheris", fake_atheris)
+
+    result = module.main(["-timeout=1", "-runs=0"])
+
+    assert result == 0
+    assert captured["argv"] == [module_path.name, "-timeout=1", "-runs=0"]
+    assert captured["fuzz_called"] is True

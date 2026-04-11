@@ -18,14 +18,33 @@ def test_contributing_mentions_develop_branch():
     assert "develop" in text
 
 
-def test_readme_quotes_dev_extra_install_command():
+def test_readme_uses_uv_sync_for_repo_setup():
     text = Path("README.md").read_text(encoding="utf-8")
-    assert 'pip install -e ".[dev]"' in text
+    assert "uv sync --frozen --all-extras" in text
+    assert 'pip install -e ".[dev]"' not in text
+    assert "python3.10 -m venv .venv" not in text
 
 
-def test_contributing_quotes_dev_extra_install_command():
+def test_contributing_uses_uv_sync_for_repo_setup():
     text = Path("CONTRIBUTING.md").read_text(encoding="utf-8")
-    assert 'pip install -e ".[dev]"' in text
+    assert "uv sync --frozen --all-extras" in text
+    assert 'pip install -e ".[dev]"' not in text
+
+
+def test_readme_documents_uv_run_entrypoints():
+    text = Path("README.md").read_text(encoding="utf-8")
+    assert "uv run uvicorn --app-dir src newsdom_api.main:app --reload" in text
+    assert "uv run pytest" in text
+    assert (
+        "uv run python fuzzers/dom_builder_fuzzer.py --smoke tests/fixtures/mineru_sample.json"
+        in text
+    )
+
+
+def test_repo_docs_note_windows_uv_python_path_equivalent():
+    for path in [Path("README.md"), Path("CONTRIBUTING.md")]:
+        text = path.read_text(encoding="utf-8")
+        assert ".venv\\Scripts\\python.exe" in text, path
 
 
 def test_pull_request_template_exists():
