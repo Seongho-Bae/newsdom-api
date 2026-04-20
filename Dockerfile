@@ -20,8 +20,7 @@ COPY --from=uv-bin /uv /uvx /bin/
 COPY pyproject.toml uv.lock README.md ./
 COPY src/ src/
 
-RUN uv sync --frozen --no-dev && \
-    uv pip install --python .venv/bin/python "mineru[pipeline]==3.0.9"
+RUN uv sync --frozen --all-extras
 
 FROM ${PYTHON_BASE} AS runtime
 
@@ -43,8 +42,5 @@ COPY --from=builder --chown=newsdom:newsdom /app /app
 USER newsdom
 
 EXPOSE 8000
-
-HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=5 \
-  CMD python -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health').read()"
 
 CMD ["uvicorn", "newsdom_api.main:app", "--host", "0.0.0.0", "--port", "8000"]

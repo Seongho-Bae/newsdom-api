@@ -24,8 +24,13 @@ dependencies = [
 dev = [
   "pytest>=8.3,<10.0",
   "pytest-cov>=5.0,<8.0",
+  "pytest-asyncio>=0.21",
   "httpx>=0.28,<1.0",
   "pyyaml>=6.0,<7.0",
+]
+mineru = [
+  "mineru[pipeline]==3.0.9",
+  "transformers>=4.48.0",
 ]
 # Hold the docs toolchain below MkDocs 2.0 until a supported migration path
 # is available for the current Material-based manual stack.
@@ -46,6 +51,7 @@ where = ["src"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+asyncio_default_fixture_loop_scope = "function"
 filterwarnings = [
     "ignore:the load_module\\(\\) method is deprecated:DeprecationWarning"
 ]
