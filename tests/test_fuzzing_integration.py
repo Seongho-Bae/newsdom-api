@@ -1,4 +1,5 @@
 import importlib.util
+import os
 import subprocess
 import sys
 from types import SimpleNamespace
@@ -144,6 +145,8 @@ def test_dom_builder_fuzzer_smoke_mode_runs_without_cluster(
     monkeypatch.chdir(tmp_path)
 
     try:
+        env = dict(os.environ)
+        env["PYTHONPATH"] = str(_repo_path("src"))
         completed = subprocess.run(
             [
                 sys.executable,
@@ -155,6 +158,7 @@ def test_dom_builder_fuzzer_smoke_mode_runs_without_cluster(
             text=True,
             check=False,
             timeout=30,
+            env=env,
         )
     except subprocess.TimeoutExpired as exc:
         raise AssertionError("smoke-mode fuzzer subprocess timed out") from exc

@@ -11,12 +11,17 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 WORKDIR /app
 
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends ca-certificates && \
+    rm -rf /var/lib/apt/lists/*
+
 COPY --from=uv-bin /uv /uvx /bin/
 
 COPY pyproject.toml uv.lock README.md ./
 COPY src/ src/
 
-RUN uv sync --frozen --no-dev
+RUN uv sync --frozen --no-dev && \
+    uv pip install --python .venv/bin/python "mineru[pipeline]==3.0.9"
 
 FROM ${PYTHON_BASE} AS runtime
 
@@ -27,11 +32,13 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 WORKDIR /app
 
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends ca-certificates && \
+    rm -rf /var/lib/apt/lists/*
+
 RUN useradd --create-home --home-dir /home/newsdom --shell /usr/sbin/nologin newsdom
 
-COPY --from=builder /app /app
-
-RUN chown -R newsdom:newsdom /app
+COPY --from=builder --chown=newsdom:newsdom /app /app
 
 USER newsdom
 

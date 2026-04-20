@@ -24,7 +24,7 @@ def _font_candidates() -> list[str]:
     ]
 
 
-def _load_font(size: int) -> ImageFont.FreeTypeFont:
+def _load_font(size: int) -> ImageFont.FreeTypeFont | ImageFont.ImageFont:
     """Load the first available Japanese-capable font at the requested size."""
 
     for candidate in _font_candidates():
@@ -32,20 +32,34 @@ def _load_font(size: int) -> ImageFont.FreeTypeFont:
             return ImageFont.truetype(candidate, size=size)
     return ImageFont.load_default()
 
+def _safe_draw_text(
+    draw: ImageDraw.ImageDraw,
+    xy: tuple[int, int],
+    text: str,
+    font: ImageFont.FreeTypeFont | ImageFont.ImageFont,
+    fill: int | str = "black",
+) -> None:
+    """Draw text with a fallback mechanism to prevent UnicodeEncodeError on default fonts."""
+    try:
+        draw.text(xy, text, fill=fill, font=font)
+    except UnicodeEncodeError:
+        # Fallback for ImageFont.load_default() which only supports latin-1
+        fallback_text = "".join(c if ord(c) < 256 else "?" for c in text)
+        draw.text(xy, fallback_text, fill=fill, font=font)
 
 def _draw_vertical_text(
     draw: ImageDraw.ImageDraw,
     text: str,
     x: int,
     y: int,
-    font: ImageFont.ImageFont,
+    font: ImageFont.FreeTypeFont | ImageFont.ImageFont,
     line_height: int,
 ) -> None:
     """Render a string as simple top-to-bottom vertical glyph placement."""
 
     cursor_y = y
     for char in text:
-        draw.text((x, cursor_y), char, fill="black", font=font)
+        _safe_draw_text(draw, (x, cursor_y), char, font=font)
         cursor_y += line_height
 
 
@@ -59,7 +73,7 @@ def _draw_vertical_columns(
     draw: ImageDraw.ImageDraw,
     bbox: tuple[int, int, int, int],
     text: str,
-    font: ImageFont.ImageFont,
+    font: ImageFont.FreeTypeFont | ImageFont.ImageFont,
 ) -> None:
     """Render multiple vertical columns of text inside the supplied bounding box."""
 
@@ -152,7 +166,7 @@ def generate_fixture(output_dir: Path, seed: int = 7) -> tuple[Path, Path]:
     caption_font = _load_font(22)
 
     draw.rectangle((60, 40, 1740, 140), outline=0, width=3)
-    draw.text((90, 65), "Synthetic Chemical Daily", font=headline_font, fill=0)
+    _safe_draw_text(draw, (90, 65), "Synthetic Chemical Daily", font=headline_font, fill=0)
 
     for article in truth["articles"]:
         x0, y0, x1, y1 = article["bbox"]
@@ -167,25 +181,25 @@ def generate_fixture(output_dir: Path, seed: int = 7) -> tuple[Path, Path]:
                 headline_font,
             )
         else:
-            draw.text(
-                (x0 + 20, y0 + 20), article["headline"], font=headline_font, fill=0
+            _safe_draw_text(
+                draw, (x0 + 20, y0 + 20), article["headline"], font=headline_font, fill=0
             )
-            draw.text((x0 + 20, y0 + 100), article["body"], font=body_font, fill=0)
+            _safe_draw_text(draw, (x0 + 20, y0 + 100), article["body"], font=body_font, fill=0)
 
     for idx, image_block in enumerate(truth["images"], start=1):
         x0, y0, x1, y1 = image_block["bbox"]
         draw.rectangle((x0, y0, x1, y1), fill=200, outline=80)
-        draw.text((x0 + 20, y0 + 20), f"PHOTO {idx}", font=headline_font, fill=20)
-        draw.text(
-            (x0 + 20, y1 - 60), f"図版キャプション {idx}", font=caption_font, fill=20
+        _safe_draw_text(draw, (x0 + 20, y0 + 20), f"PHOTO {idx}", font=headline_font, fill=20)
+        _safe_draw_text(
+            draw, (x0 + 20, y1 - 60), f"図版キャプション {idx}", font=caption_font, fill=20
         )
 
     for idx, ad in enumerate(truth["ads"], start=1):
         x0, y0, x1, y1 = ad["bbox"]
         draw.rectangle((x0, y0, x1, y1), fill=225, outline=160, width=2)
-        draw.text((x0 + 20, y0 + 20), f"SPONSORED {idx}", font=headline_font, fill=40)
-        draw.text(
-            (x0 + 20, y0 + 110),
+        _safe_draw_text(draw, (x0 + 20, y0 + 20), f"SPONSORED {idx}", font=headline_font, fill=40)
+        _safe_draw_text(
+            draw, (x0 + 20, y0 + 110),
             "Synthetic industrial advertisement block.",
             font=caption_font,
             fill=40,
@@ -198,9 +212,10 @@ def generate_fixture(output_dir: Path, seed: int = 7) -> tuple[Path, Path]:
     image.save(image_path)
 
     pdf_canvas = canvas.Canvas(str(pdf_path), pagesize=(PAGE_WIDTH, PAGE_HEIGHT))
-    pdf_canvas.drawImage(
-        ImageReader(str(image_path)), 0, 0, width=PAGE_WIDTH, height=PAGE_HEIGHT
-    )
+    with open(image_path, "rb") as img_file:
+        pdf_canvas.drawImage(
+            ImageReader(img_file), 0, 0, width=PAGE_WIDTH, height=PAGE_HEIGHT
+        )
     pdf_canvas.save()
 
     truth_path.write_text(
