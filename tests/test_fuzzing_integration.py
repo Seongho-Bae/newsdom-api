@@ -144,6 +144,9 @@ def test_dom_builder_fuzzer_smoke_mode_runs_without_cluster(
 ):
     monkeypatch.chdir(tmp_path)
 
+    env = os.environ.copy()
+    env["PYTHONPATH"] = str(_repo_path("src"))
+
     try:
         env = dict(os.environ)
         env["PYTHONPATH"] = str(_repo_path("src"))

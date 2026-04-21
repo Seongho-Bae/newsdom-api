@@ -47,6 +47,7 @@ def _safe_draw_text(
         fallback_text = "".join(c if ord(c) < 256 else "?" for c in text)  # pragma: no cover
         draw.text(xy, fallback_text, fill=fill, font=font)  # pragma: no cover
 
+
 def _draw_vertical_text(
     draw: ImageDraw.ImageDraw,
     text: str,

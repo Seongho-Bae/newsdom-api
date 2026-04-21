@@ -12,7 +12,7 @@ def _load_container_image_workflow() -> dict:
 
 
 def _find_step_by_uses(steps: list[dict], uses: str) -> dict:
-    match = next((step for step in steps if step.get("uses") == uses), None)
+    match = next((step for step in steps if re.match(rf"{re.escape(uses)}@[0-9a-fA-F]{{40}}", step.get("uses", ""))), None)
     assert match is not None, f"missing workflow step for uses={uses!r}"
     return match
 
@@ -117,8 +117,8 @@ def test_dockerignore_line_parser_does_not_confuse_prefix_matches():
 
 
 def test_find_step_by_uses_raises_clear_error_for_missing_step():
-    with pytest.raises(AssertionError, match="docker/example-action@deadbeef"):
-        _find_step_by_uses([], "docker/example-action@deadbeef")
+    with pytest.raises(AssertionError, match="docker/example-action"):
+        _find_step_by_uses([], "docker/example-action")
 
 
 def test_readme_documents_docker_build_and_run():
@@ -180,12 +180,12 @@ def test_container_image_workflow_exists_for_ghcr_release():
     image_steps = data["jobs"]["image"]["steps"]
     image_build_step = _find_step_by_uses(
         image_steps,
-        "docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8",
+        "docker/build-push-action",
     )
     nvidia_steps = data["jobs"]["image-nvidia"]["steps"]
     nvidia_build_step = _find_step_by_uses(
         nvidia_steps,
-        "docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8",
+        "docker/build-push-action",
     )
 
     assert data["jobs"]["image"]["env"]["REGISTRY"] == "ghcr.io"
