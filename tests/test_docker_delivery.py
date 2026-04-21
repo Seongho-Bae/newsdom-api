@@ -12,7 +12,7 @@ def _load_container_image_workflow() -> dict:
 
 
 def _find_step_by_uses(steps: list[dict], uses: str) -> dict:
-    match = next((step for step in steps if step.get("uses", "").startswith(uses)), None)
+    match = next((step for step in steps if re.match(rf"{re.escape(uses)}@[0-9a-fA-F]{{40}}", step.get("uses", ""))), None)
     assert match is not None, f"missing workflow step for uses={uses!r}"
     return match
 
@@ -85,7 +85,7 @@ def test_dockerfile_uses_project_metadata_and_src_layout():
     assert _contains_pinned_uv_image(text)
 
 
-def test_dockerfile_runs_uvicorn_with_healthcheck_and_external_mineru_path():
+def test_dockerfile_runs_uvicorn_with_external_mineru_path():
     text = Path("Dockerfile").read_text(encoding="utf-8")
     assert "uvicorn" in text
     assert "newsdom_api.main:app" in text
@@ -93,7 +93,7 @@ def test_dockerfile_runs_uvicorn_with_healthcheck_and_external_mineru_path():
     assert "--host" in text
     assert "0.0.0.0" in text
     assert "8000" in text
-    assert _contains_healthcheck_path(text, "/health")
+    assert not _contains_healthcheck_path(text, "/health")
 
 
 def test_nvidia_dockerfile_installs_mineru_pipeline_stack():
@@ -117,8 +117,8 @@ def test_dockerignore_line_parser_does_not_confuse_prefix_matches():
 
 
 def test_find_step_by_uses_raises_clear_error_for_missing_step():
-    with pytest.raises(AssertionError, match="docker/example-action@deadbeef"):
-        _find_step_by_uses([], "docker/example-action@deadbeef")
+    with pytest.raises(AssertionError, match="docker/example-action"):
+        _find_step_by_uses([], "docker/example-action")
 
 
 def test_readme_documents_docker_build_and_run():
@@ -180,12 +180,12 @@ def test_container_image_workflow_exists_for_ghcr_release():
     image_steps = data["jobs"]["image"]["steps"]
     image_build_step = _find_step_by_uses(
         image_steps,
-        "docker/build-push-action@",
+        "docker/build-push-action",
     )
     nvidia_steps = data["jobs"]["image-nvidia"]["steps"]
     nvidia_build_step = _find_step_by_uses(
         nvidia_steps,
-        "docker/build-push-action@",
+        "docker/build-push-action",
     )
 
     assert data["jobs"]["image"]["env"]["REGISTRY"] == "ghcr.io"

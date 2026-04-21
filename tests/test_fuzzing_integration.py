@@ -148,6 +148,8 @@ def test_dom_builder_fuzzer_smoke_mode_runs_without_cluster(
     env["PYTHONPATH"] = str(_repo_path("src"))
 
     try:
+        env = dict(os.environ)
+        env["PYTHONPATH"] = str(_repo_path("src"))
         completed = subprocess.run(
             [
                 sys.executable,

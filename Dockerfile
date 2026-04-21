@@ -11,12 +11,16 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 WORKDIR /app
 
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends ca-certificates && \
+    rm -rf /var/lib/apt/lists/*
+
 COPY --from=uv-bin /uv /uvx /bin/
 
 COPY pyproject.toml uv.lock README.md ./
 COPY src/ src/
 
-RUN uv sync --frozen --no-dev
+RUN uv sync --frozen --no-dev --extra mineru
 
 FROM ${PYTHON_BASE} AS runtime
 
@@ -27,17 +31,16 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 WORKDIR /app
 
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends ca-certificates && \
+    rm -rf /var/lib/apt/lists/*
+
 RUN useradd --create-home --home-dir /home/newsdom --shell /usr/sbin/nologin newsdom
 
-COPY --from=builder /app /app
-
-RUN chown -R newsdom:newsdom /app
+COPY --from=builder --chown=newsdom:newsdom /app /app
 
 USER newsdom
 
 EXPOSE 8000
-
-HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=5 \
-  CMD python -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health').read()"
 
 CMD ["uvicorn", "newsdom_api.main:app", "--host", "0.0.0.0", "--port", "8000"]
