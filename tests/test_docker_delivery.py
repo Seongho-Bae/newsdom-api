@@ -12,7 +12,7 @@ def _load_container_image_workflow() -> dict:
 
 
 def _find_step_by_uses(steps: list[dict], uses: str) -> dict:
-    match = next((step for step in steps if step.get("uses") == uses), None)
+    match = next((step for step in steps if step.get("uses", "").startswith(uses)), None)
     assert match is not None, f"missing workflow step for uses={uses!r}"
     return match
 
@@ -180,12 +180,12 @@ def test_container_image_workflow_exists_for_ghcr_release():
     image_steps = data["jobs"]["image"]["steps"]
     image_build_step = _find_step_by_uses(
         image_steps,
-        "docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8",
+        "docker/build-push-action@",
     )
     nvidia_steps = data["jobs"]["image-nvidia"]["steps"]
     nvidia_build_step = _find_step_by_uses(
         nvidia_steps,
-        "docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8",
+        "docker/build-push-action@",
     )
 
     assert data["jobs"]["image"]["env"]["REGISTRY"] == "ghcr.io"

@@ -49,6 +49,9 @@ testpaths = ["tests"]
 markers = [
   "integration: requires MinerU CLI and model cache"
 ]
+filterwarnings = [
+  "ignore:the load_module\\(\\) method is deprecated:DeprecationWarning"
+]
 
 [tool.coverage.run]
 source = ["src/newsdom_api"]

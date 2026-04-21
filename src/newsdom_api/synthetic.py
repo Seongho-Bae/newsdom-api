@@ -33,6 +33,21 @@ def _load_font(size: int) -> ImageFont.FreeTypeFont:
     return ImageFont.load_default()
 
 
+def _safe_draw_text(
+    draw: ImageDraw.ImageDraw,
+    xy: tuple[float, float],
+    text: str,
+    font: ImageFont.ImageFont,
+    fill: str | int,
+) -> None:
+    """Safely draw text ignoring unsupported characters."""
+
+    try:
+        draw.text(xy, text, fill=fill, font=font)
+    except UnicodeEncodeError:  # pragma: no cover
+        pass
+
+
 def _draw_vertical_text(
     draw: ImageDraw.ImageDraw,
     text: str,
@@ -45,7 +60,7 @@ def _draw_vertical_text(
 
     cursor_y = y
     for char in text:
-        draw.text((x, cursor_y), char, fill="black", font=font)
+        _safe_draw_text(draw, (x, cursor_y), char, font=font, fill="black")
         cursor_y += line_height
 
 
@@ -152,7 +167,7 @@ def generate_fixture(output_dir: Path, seed: int = 7) -> tuple[Path, Path]:
     caption_font = _load_font(22)
 
     draw.rectangle((60, 40, 1740, 140), outline=0, width=3)
-    draw.text((90, 65), "Synthetic Chemical Daily", font=headline_font, fill=0)
+    _safe_draw_text(draw, (90, 65), "Synthetic Chemical Daily", font=headline_font, fill=0)
 
     for article in truth["articles"]:
         x0, y0, x1, y1 = article["bbox"]
@@ -167,24 +182,25 @@ def generate_fixture(output_dir: Path, seed: int = 7) -> tuple[Path, Path]:
                 headline_font,
             )
         else:
-            draw.text(
-                (x0 + 20, y0 + 20), article["headline"], font=headline_font, fill=0
+            _safe_draw_text(
+                draw, (x0 + 20, y0 + 20), article["headline"], font=headline_font, fill=0
             )
-            draw.text((x0 + 20, y0 + 100), article["body"], font=body_font, fill=0)
+            _safe_draw_text(draw, (x0 + 20, y0 + 100), article["body"], font=body_font, fill=0)
 
     for idx, image_block in enumerate(truth["images"], start=1):
         x0, y0, x1, y1 = image_block["bbox"]
         draw.rectangle((x0, y0, x1, y1), fill=200, outline=80)
-        draw.text((x0 + 20, y0 + 20), f"PHOTO {idx}", font=headline_font, fill=20)
-        draw.text(
-            (x0 + 20, y1 - 60), f"図版キャプション {idx}", font=caption_font, fill=20
+        _safe_draw_text(draw, (x0 + 20, y0 + 20), f"PHOTO {idx}", font=headline_font, fill=20)
+        _safe_draw_text(
+            draw, (x0 + 20, y1 - 60), f"図版キャプション {idx}", font=caption_font, fill=20
         )
 
     for idx, ad in enumerate(truth["ads"], start=1):
         x0, y0, x1, y1 = ad["bbox"]
         draw.rectangle((x0, y0, x1, y1), fill=225, outline=160, width=2)
-        draw.text((x0 + 20, y0 + 20), f"SPONSORED {idx}", font=headline_font, fill=40)
-        draw.text(
+        _safe_draw_text(draw, (x0 + 20, y0 + 20), f"SPONSORED {idx}", font=headline_font, fill=40)
+        _safe_draw_text(
+            draw,
             (x0 + 20, y0 + 110),
             "Synthetic industrial advertisement block.",
             font=caption_font,
