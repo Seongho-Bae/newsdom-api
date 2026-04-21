@@ -85,7 +85,7 @@ def test_dockerfile_uses_project_metadata_and_src_layout():
     assert _contains_pinned_uv_image(text)
 
 
-def test_dockerfile_runs_uvicorn_with_healthcheck_and_external_mineru_path():
+def test_dockerfile_runs_uvicorn_with_external_mineru_path():
     text = Path("Dockerfile").read_text(encoding="utf-8")
     assert "uvicorn" in text
     assert "newsdom_api.main:app" in text
@@ -93,7 +93,7 @@ def test_dockerfile_runs_uvicorn_with_healthcheck_and_external_mineru_path():
     assert "--host" in text
     assert "0.0.0.0" in text
     assert "8000" in text
-    assert _contains_healthcheck_path(text, "/health")
+    assert not _contains_healthcheck_path(text, "/health")
 
 
 def test_nvidia_dockerfile_installs_mineru_pipeline_stack():
