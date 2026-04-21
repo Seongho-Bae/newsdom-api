@@ -20,7 +20,7 @@ COPY --from=uv-bin /uv /uvx /bin/
 COPY pyproject.toml uv.lock README.md ./
 COPY src/ src/
 
-RUN uv sync --frozen --all-extras
+RUN uv sync --frozen --no-dev --extra mineru
 
 FROM ${PYTHON_BASE} AS runtime
 
