@@ -1,0 +1,35 @@
+# Docker image for running the test suite in a controlled and reliable environment
+FROM python:3.10-slim
+
+# Set timezone to avoid interactive prompts during package installations
+ENV TZ=Asia/Tokyo
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+
+WORKDIR /app
+
+# Install system dependencies, including Git, Tesseract for future use, and Japanese fonts
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    git \
+    tesseract-ocr \
+    tesseract-ocr-jpn \
+    fonts-ipafont-gothic \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy only necessary files for dependency installation first to leverage caching
+COPY pyproject.toml uv.lock ./
+
+# Install uv via pip
+RUN pip install uv==0.1.41
+
+# Install all project dependencies into a virtual environment
+# This includes the 'mineru' extra which installs the OCR engine
+RUN uv sync --frozen --all-extras
+
+# Copy the rest of the application source code
+COPY . .
+
+# Add the virtual environment's bin to the PATH to make scripts like 'mineru' available
+ENV PATH="/app/.venv/bin:$PATH"
+
+# Verify that the 'mineru' executable is now on the PATH
+RUN which mineru
