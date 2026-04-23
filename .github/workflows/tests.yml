@@ -30,6 +30,9 @@ jobs:
       - name: Install package
         run: uv sync --locked --extra dev
 
+      - name: Debug venv contents
+        run: ls -R .venv/bin
+
       - name: Locate venv paths
         id: venv
         run: |
