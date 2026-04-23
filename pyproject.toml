@@ -41,9 +41,6 @@ fuzz = [
   "pyinstaller==6.16.0",
 ]
 
-[project.scripts]
-mineru = "mineru.cli.app:app"
-
 [tool.setuptools]
 package-dir = { "" = "src", "tools" = "tools"}
 
