@@ -30,6 +30,9 @@ jobs:
       - name: Install dependencies
         run: uv sync --frozen --all-extras
 
+      - name: Install mineru executable
+        run: uv pip install "mineru[pipeline]==3.0.9"
+
       - name: Run tests with warnings as errors
         env:
           PYTHONWARNINGS: error
