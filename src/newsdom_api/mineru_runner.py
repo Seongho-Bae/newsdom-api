@@ -3,8 +3,8 @@
 from __future__ import annotations
 
 import json
+import shutil
 import subprocess
-import sys
 import tempfile
 from pathlib import Path
 from typing import Any
@@ -12,13 +12,12 @@ from typing import Any
 from fastapi import HTTPException
 
 
-def build_mineru_command(input_pdf: Path, output_dir: Path) -> list[str]:
+def build_mineru_command(
+    input_pdf: Path, output_dir: Path, mineru_bin: str = "mineru"
+) -> list[str]:
     """Build the MinerU CLI command for OCR pipeline execution."""
-    # Use 'python -m' to avoid PATH issues and reliance on setuptools scripts
     return [
-        sys.executable,
-        "-m",
-        "mineru.cli.app",
+        mineru_bin,
         "-p",
         str(input_pdf),
         "-o",
@@ -32,6 +31,17 @@ def build_mineru_command(input_pdf: Path, output_dir: Path) -> list[str]:
     ]
 
 
+def _resolve_mineru_bin() -> str:
+    """Resolve the MinerU executable path from PATH."""
+    found = shutil.which("mineru")
+    if not found:
+        raise FileNotFoundError(
+            "Could not find 'mineru' executable. "
+            "Ensure it is installed and on the PATH."
+        )
+    return found
+
+
 def _find_output_dir(base_output_dir: Path) -> Path:
     """Locate the OCR output directory created by MinerU."""
     candidates = list(base_output_dir.glob("*/ocr"))
@@ -42,9 +52,10 @@ def _find_output_dir(base_output_dir: Path) -> Path:
 
 def run_mineru(input_pdf: Path) -> dict[str, Any]:
     """Run MinerU on a PDF and return parsed JSON artifacts plus raw process output."""
+    mineru_bin = _resolve_mineru_bin()
     with tempfile.TemporaryDirectory(prefix="newsdom-mineru-") as tempdir:
         output_dir = Path(tempdir)
-        cmd = build_mineru_command(input_pdf, output_dir)
+        cmd = build_mineru_command(input_pdf, output_dir, mineru_bin=mineru_bin)
         try:
             completed = subprocess.run(
                 cmd, check=True, capture_output=True, text=True, timeout=300
