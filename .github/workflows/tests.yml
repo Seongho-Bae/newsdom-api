@@ -30,13 +30,14 @@ jobs:
       - name: Install package
         run: uv sync --locked --extra dev
 
-      - name: Debug venv contents
-        run: ls -R .venv/bin
+      - name: Force install mineru executable
+        run: .venv/bin/pip install mineru
 
       - name: Locate venv paths
         id: venv
         run: |
           MINERU_PATH=$(find ${{ github.workspace }}/.venv -type f -name mineru)
+          echo "Found mineru at: ${MINERU_PATH}"
           echo "MINERU_PATH=${MINERU_PATH}" >> $GITHUB_ENV
 
       - name: Run tests with warnings as errors
