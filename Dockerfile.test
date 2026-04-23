@@ -1,0 +1,26 @@
+# Docker image for running the test suite in a controlled environment
+FROM python:3.10-slim
+
+# Set up the working directory
+WORKDIR /app
+
+# Install system dependencies that might be needed by Python packages
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    git \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy application files
+COPY . .
+
+# Install uv via pip
+RUN pip install uv==0.1.41
+
+# Install all project dependencies, including optional ones for tests
+# This creates the .venv directory inside the image
+RUN uv sync --frozen --all-extras
+
+# Add the virtual environment's bin to the PATH
+ENV PATH="/app/.venv/bin:$PATH"
+
+# As a verification step, ensure mineru is found
+RUN which mineru
