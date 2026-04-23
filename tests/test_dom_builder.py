@@ -85,7 +85,7 @@ def test_build_dom_preserves_multi_page_structure_and_page_scoped_metadata():
     first_page = dom.pages[0]
     second_page = dom.pages[1]
 
-    assert [page.page_number for page in dom.pages] == [0, 1]
+    assert [page.page_number for page in dom.pages] == [1, 2]
     assert (first_page.width, first_page.height) == (1200.0, 1800.0)
     assert (second_page.width, second_page.height) == (1280.0, 1820.0)
     assert first_page.headers == ["Synthetic News Page 1"]
@@ -184,3 +184,21 @@ def test_build_dom_warns_when_model_and_content_pages_diverge_and_skips_invalid_
         "content/model divergence: content_list references page_idx 1 absent from model",
         "content/model divergence: model page 2 has no content_list blocks",
     ]
+
+
+def test_build_dom_normalizes_zero_based_page_indices_to_one_based_response_numbers():
+    dom = build_dom(
+        [
+            {"type": "text", "text": "page zero body", "page_idx": 0},
+            {"type": "text", "text": "page one body", "page_idx": 1},
+        ],
+        document_id="doc-page-normalization",
+        model=[
+            {"page_info": {"page_no": 0, "width": 1000, "height": 1400}},
+            {"page_info": {"page_no": 1, "width": 1000, "height": 1400}},
+        ],
+    )
+
+    assert [page.page_number for page in dom.pages] == [1, 2]
+    assert dom.pages[0].articles[0].body_blocks == ["page zero body"]
+    assert dom.pages[1].articles[0].body_blocks == ["page one body"]

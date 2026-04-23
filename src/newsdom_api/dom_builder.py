@@ -122,16 +122,18 @@ def build_dom(
     if not page_numbers:
         page_numbers = [1]
 
+    page_number_offset = 1 if page_numbers and min(page_numbers) == 0 else 0
+
     pages: dict[int, PageNode] = {}
     current_articles: dict[int, ArticleNode | None] = {}
-    for page_number in page_numbers:
-        width, height = model_page_info.get(page_number, (None, None))
-        pages[page_number] = PageNode(
-            page_number=page_number,
+    for raw_page_number in page_numbers:
+        width, height = model_page_info.get(raw_page_number, (None, None))
+        pages[raw_page_number] = PageNode(
+            page_number=raw_page_number + page_number_offset,
             width=width,
             height=height,
         )
-        current_articles[page_number] = None
+        current_articles[raw_page_number] = None
 
     for page_number in sorted(content_page_numbers - model_page_numbers):
         warnings.append(
