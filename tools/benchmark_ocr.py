@@ -11,9 +11,19 @@ from newsdom_api.service import parse_pdf_bytes
 
 
 def run_mineru_engine(pdf_path: Path) -> dict[str, Any]:
-    """Wrapper for the existing mineru service to be used as an engine."""
+    """
+    Run the 'mineru' OCR engine on a single PDF file.
+
+    This function acts as a wrapper around the existing 'parse_pdf_bytes' service,
+    adapting its output for the benchmark harness.
+
+    Args:
+        pdf_path: The path to the PDF file to process.
+
+    Returns:
+        A dictionary containing the processing status and key metrics.
+    """
     response = parse_pdf_bytes(pdf_path.read_bytes(), filename=pdf_path.name)
-    # Extract a minimal set of metrics for benchmarking
     return {
         "status": "success",
         "page_count": len(response.pages),
@@ -21,8 +31,6 @@ def run_mineru_engine(pdf_path: Path) -> dict[str, Any]:
     }
 
 
-# A dictionary to hold all available OCR engines.
-# This can be extended with new engines in the future.
 OCR_ENGINES: dict[str, Callable[[Path], dict[str, Any]]] = {
     "mineru": run_mineru_engine,
 }
@@ -31,7 +39,18 @@ OCR_ENGINES: dict[str, Callable[[Path], dict[str, Any]]] = {
 def run_benchmark(
     fixtures_dir: Path, output_path: Path, engines: list[str]
 ) -> None:
-    """Run the OCR benchmark against a directory of PDFs."""
+    """
+    Run the OCR benchmark against a directory of PDFs for a list of engines.
+
+    It iterates through each PDF and runs each specified engine, capturing
+    success, failure, or timeout, along with performance metrics. The
+    aggregated results are written to a JSON file.
+
+    Args:
+        fixtures_dir: The directory containing the PDF files to benchmark.
+        output_path: The path to write the final JSON results file.
+        engines: A list of engine names to run.
+    """
     pdf_paths = sorted(list(fixtures_dir.glob("*.pdf")))
     if not pdf_paths:
         raise FileNotFoundError(f"No PDF files found in {fixtures_dir}")
@@ -97,6 +116,14 @@ def run_benchmark(
 
 
 def main(argv: list[str] | None = None) -> None:
+    """
+    Main entry point for the OCR benchmark script.
+
+    Parses command-line arguments and initiates the benchmark run.
+
+    Args:
+        argv: Optional list of command-line arguments for testing.
+    """
     parser = argparse.ArgumentParser(
         description="Run OCR benchmark against a directory of PDFs."
     )
