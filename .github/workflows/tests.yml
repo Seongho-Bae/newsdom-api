@@ -33,4 +33,5 @@ jobs:
       - name: Run tests with warnings as errors
         env:
           PYTHONWARNINGS: error
+          NEWSDOM_MINERU_BIN: ${{ github.workspace }}/.venv/bin/mineru
         run: uv run pytest
