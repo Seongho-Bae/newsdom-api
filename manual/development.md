@@ -35,6 +35,14 @@
 python tools/derive_private_baseline.py tests/fixtures/private_page_baseline.json
 ```
 
+또는 로컬에서 따로 정리한 **비표현적(redacted) 구조 측정치 JSON** 가 있다면 아래처럼 사용할 수 있습니다:
+
+```bash
+python tools/derive_private_baseline.py --measurements local_measurements.json tests/fixtures/private_page_baseline.json
+```
+
+이 측정치 파일에는 페이지 수, 기사 수, headline 존재 여부, vertical 여부 같은 **구조적 숫자/불리언 데이터만** 들어가야 하며, OCR 원문/파일명/이미지 조각은 포함하면 안 됩니다.
+
 **반드시 원본 데이터가 아닌 이 스크립트를 통해 생성된 파생 JSON 파일만 저장소에 반영(Commit)해야 합니다.**
 
 ---

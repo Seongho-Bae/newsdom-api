@@ -18,5 +18,9 @@ def parse_pdf_bytes(data: bytes, filename: str = "upload.pdf") -> ParseResponse:
         pdf_path = Path(tempdir) / safe_name
         pdf_path.write_bytes(data)
         mineru_output = run_mineru(pdf_path)
-        response = build_dom(mineru_output["content_list"], document_id=pdf_path.stem)
+        response = build_dom(
+            mineru_output["content_list"],
+            document_id=pdf_path.stem,
+            model=mineru_output.get("model"),
+        )
         return response
