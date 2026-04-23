@@ -30,8 +30,14 @@ jobs:
       - name: Install package
         run: uv sync --locked --extra dev
 
+      - name: Locate venv paths
+        id: venv
+        run: |
+          MINERU_PATH=$(find ${{ github.workspace }}/.venv -type f -name mineru)
+          echo "MINERU_PATH=${MINERU_PATH}" >> $GITHUB_ENV
+
       - name: Run tests with warnings as errors
         env:
           PYTHONWARNINGS: error
-          NEWSDOM_MINERU_BIN: ${{ github.workspace }}/.venv/bin/mineru
+          NEWSDOM_MINERU_BIN: ${{ env.MINERU_PATH }}
         run: uv run pytest
