@@ -31,7 +31,7 @@ jobs:
 
       - name: Define image name and tag
         id: image_name
-        run: echo "name=ghcr.io/${{ github.repository_owner }}/newsdom-api/test:${{ github.sha }}" | tee -a $GITHUB_OUTPUT
+        run: echo "name=ghcr.io/${{ github.repository_owner,, }}/newsdom-api/test:${{ github.sha }}" | tee -a $GITHUB_OUTPUT
 
       - name: Build and push test image
         uses: docker/build-push-action@v5
