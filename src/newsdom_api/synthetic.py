@@ -93,7 +93,11 @@ def _draw_vertical_columns(
 
 
 def _article_block(
-    headline: str, body: str, bbox: tuple[int, int, int, int], vertical: bool = True
+    headline: str,
+    body: str,
+    bbox: tuple[int, int, int, int],
+    vertical: bool = True,
+    page_number: int = 1,
 ) -> dict:
     """Create one synthetic article descriptor for the fixture ground truth."""
 
@@ -102,6 +106,7 @@ def _article_block(
         "body": body,
         "bbox": list(bbox),
         "vertical": vertical,
+        "page_number": page_number,
     }
 
 
@@ -147,6 +152,8 @@ def _ground_truth() -> dict:
         ],
         "headline_blocks": 4,
         "vertical_article_ratio": 1.0,
+        "page_count": 1,
+        "headline_page_coverage": 1.0,
     }
 
 
