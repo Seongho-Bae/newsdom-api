@@ -30,11 +30,12 @@ jobs:
       - name: Install dependencies
         run: uv sync --locked --extra dev
 
-      - name: Ensure mineru executable is installed
-        run: uv pip install mineru
+      - name: Set MinerU Path
+        id: minerupath
+        run: echo "MINERU_PATH=$(uv run which mineru)" >> $GITHUB_ENV
 
       - name: Run tests with warnings as errors
         env:
           PYTHONWARNINGS: error
-          NEWSDOM_MINERU_BIN: /home/runner/work/newsdom-api/newsdom-api/.venv/bin/mineru
+          NEWSDOM_MINERU_BIN: ${{ env.MINERU_PATH }}
         run: uv run pytest
