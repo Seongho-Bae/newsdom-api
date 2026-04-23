@@ -27,16 +27,14 @@ jobs:
         with:
           version: '0.11.3'
 
-      - name: Install package
+      - name: Install dependencies
         run: uv sync --locked --extra dev
 
-      - name: Debug venv location and contents
-        run: |
-          VENV_PATH=$(uv venv)
-          echo "Virtual environment is at: ${VENV_PATH}"
-          ls -R "${VENV_PATH}"
+      - name: Ensure mineru executable is installed
+        run: uv pip install mineru
 
       - name: Run tests with warnings as errors
         env:
           PYTHONWARNINGS: error
+          NEWSDOM_MINERU_BIN: /home/runner/work/newsdom-api/newsdom-api/.venv/bin/mineru
         run: uv run pytest
