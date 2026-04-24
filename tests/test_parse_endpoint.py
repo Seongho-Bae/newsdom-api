@@ -39,7 +39,7 @@ def test_parse_endpoint_requires_pdf_file():
 
 
 def test_parse_endpoint_returns_503_for_mineru_runtime_failure(monkeypatch):
-    def fake_run(cmd, check, capture_output, text):
+    def fake_run(cmd, check, capture_output, text, timeout=None):
         assert check is True
         assert capture_output is True
         assert text is True
@@ -79,7 +79,7 @@ def test_parse_endpoint_returns_502_for_incomplete_mineru_output(
         lambda prefix: _FakeTempDir(tempdir),
     )
 
-    def fake_run(cmd, check, capture_output, text):
+    def fake_run(cmd, check, capture_output, text, timeout=None):
         assert check is True
         assert capture_output is True
         assert text is True

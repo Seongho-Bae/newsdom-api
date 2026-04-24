@@ -87,64 +87,21 @@ def _get_or_create_article(
     return article
 
 
-def build_dom(
+def _build_page_dom(
     content_list: list[dict[str, Any]],
-    document_id: str,
-    model: list[dict[str, Any]] | None = None,
-) -> ParseResponse:
-    """Normalize MinerU-style content blocks into the canonical NewsDOM schema."""
+    *,
+    page_number: int,
+    article_seq: count,
+    width: float | None = None,
+    height: float | None = None,
+) -> PageNode:
+    """Normalize MinerU-style content blocks into a canonical NewsDOM page."""
 
-    article_seq = count(1)
-    warnings: list[str] = []
-    model = model or []
-
-    model_page_info: dict[int, tuple[float | None, float | None]] = {}
-    model_page_numbers: set[int] = set()
-    for page_model in model:
-        page_info = page_model.get("page_info") or {}
-        page_number = _coerce_page_number(page_info.get("page_no"))
-        if page_number is None:
-            continue
-        model_page_numbers.add(page_number)
-        width = page_info.get("width")
-        height = page_info.get("height")
-        model_page_info[page_number] = (
-            float(width) if width is not None else None,
-            float(height) if height is not None else None,
-        )
-
-    content_page_numbers = {
-        page_number
-        for block in content_list
-        if (page_number := _coerce_page_number(block.get("page_idx"))) is not None
-    }
-
-    page_numbers = sorted(model_page_numbers | content_page_numbers)
-    if not page_numbers:
-        page_numbers = [1]
-
-    page_number_offset = 1 if page_numbers and min(page_numbers) == 0 else 0
-
-    pages: dict[int, PageNode] = {}
+    page = PageNode(page_number=page_number, width=width, height=height)
+    current_article: ArticleNode | None = None
+    # Provide a dictionary mimicking what _get_or_create_article expects
+    # since _build_page_dom operates on one page at a time.
     current_articles: dict[int, ArticleNode | None] = {}
-    for raw_page_number in page_numbers:
-        width, height = model_page_info.get(raw_page_number, (None, None))
-        pages[raw_page_number] = PageNode(
-            page_number=raw_page_number + page_number_offset,
-            width=width,
-            height=height,
-        )
-        current_articles[raw_page_number] = None
-
-    for page_number in sorted(content_page_numbers - model_page_numbers):
-        warnings.append(
-            f"content/model divergence: content_list references page_idx {page_number} absent from model"
-        )
-    for page_number in sorted(model_page_numbers - content_page_numbers):
-        warnings.append(
-            f"content/model divergence: model page {page_number} has no content_list blocks"
-        )
-
 
     for block in content_list:
         block_type = block.get("type")
@@ -230,8 +187,104 @@ def build_dom(
         )
         article.body_blocks.append(text.replace("\n", " "))
 
+    return page
+
+
+def _page_number_from_info(page_info: dict[str, Any], fallback: int) -> int:
+    """Resolve page numbering from MinerU page metadata."""
+
+    page_number = page_info.get("page_number")
+    if isinstance(page_number, int):
+        return page_number
+
+    page_no = page_info.get("page_no")
+    if isinstance(page_no, int):
+        return page_no + 1
+
+    return fallback
+
+
+def build_dom(
+    content_list: list[dict[str, Any]],
+    document_id: str,
+    model: list[dict[str, Any]] | None = None,
+) -> ParseResponse:
+    """Normalize MinerU-style content blocks into the canonical NewsDOM schema."""
+
+    page_info_by_idx: dict[int, dict[str, Any]] = {}
+    quality_warnings: list[str] = []
+    if model:
+        for index, page_model in enumerate(model):
+            page_info = page_model.get("page_info") or {}
+            page_info_by_idx[index] = page_info
+
+    has_page_idx = any(isinstance(block.get("page_idx"), int) for block in content_list)
+    if not has_page_idx:
+        article_seq = count(1)
+        if len(page_info_by_idx) > 1:
+            quality_warnings.append(
+                "Some blocks are missing page_idx; content was assigned to page_idx 0 while preserving model-declared page count."
+            )
+            pages = []
+            for page_idx in sorted(page_info_by_idx):
+                page_info = page_info_by_idx.get(page_idx, {})
+                pages.append(
+                    _build_page_dom(
+                        content_list if page_idx == 0 else [],
+                        page_number=_page_number_from_info(page_info, page_idx + 1),
+                        article_seq=article_seq,
+                        width=page_info.get("width"),
+                        height=page_info.get("height"),
+                    )
+                )
+            return ParseResponse(
+                document_id=document_id,
+                pages=pages,
+                quality=ParseQuality(warnings=quality_warnings),
+            )
+
+        page_info = page_info_by_idx.get(0, {})
+        return ParseResponse(
+            document_id=document_id,
+            pages=[
+                _build_page_dom(
+                    content_list,
+                    page_number=_page_number_from_info(page_info, 1),
+                    article_seq=article_seq,
+                    width=page_info.get("width"),
+                    height=page_info.get("height"),
+                )
+            ],
+        )
+
+    has_missing_page_idx = any(not isinstance(block.get("page_idx"), int) for block in content_list)
+    if has_missing_page_idx and len(page_info_by_idx) > 1:
+        quality_warnings.append(
+            "Some blocks are missing page_idx; untagged blocks were assigned to page_idx 0 for deterministic grouping."
+        )
+
+    blocks_by_page_idx: dict[int, list[dict[str, Any]]] = {}
+    for block in content_list:
+        page_idx = block.get("page_idx")
+        normalized_page_idx = page_idx if isinstance(page_idx, int) else 0
+        blocks_by_page_idx.setdefault(normalized_page_idx, []).append(block)
+
+    pages = []
+    article_seq = count(1)
+    for page_idx in sorted(blocks_by_page_idx):
+        page_info = page_info_by_idx.get(page_idx, {})
+        pages.append(
+            _build_page_dom(
+                blocks_by_page_idx[page_idx],
+                page_number=_page_number_from_info(page_info, page_idx + 1),
+                article_seq=article_seq,
+                width=page_info.get("width"),
+                height=page_info.get("height"),
+            )
+        )
+
     return ParseResponse(
         document_id=document_id,
-        pages=[pages[page_number] for page_number in sorted(pages)],
-        quality=ParseQuality(warnings=warnings),
+        pages=pages,
+        quality=ParseQuality(warnings=quality_warnings),
     )

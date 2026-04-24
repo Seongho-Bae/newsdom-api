@@ -7,7 +7,9 @@ from newsdom_api.service import parse_pdf_bytes
 
 def test_parse_pdf_bytes_writes_temp_file_and_builds_dom(monkeypatch):
     observed = {}
-    model = [{"page_info": {"page_no": 0, "width": 100.0, "height": 200.0}}]
+    model = json.loads(
+        Path("tests/fixtures/mineru_multi_page_model.json").read_text(encoding="utf-8")
+    )
 
     def fake_run_mineru(path: Path):
         observed["path_name"] = path.name

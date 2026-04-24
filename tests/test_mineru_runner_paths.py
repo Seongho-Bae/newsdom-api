@@ -140,11 +140,10 @@ def test_run_mineru_wraps_called_process_error(monkeypatch, tmp_path: Path):
         lambda prefix: _FakeTempDir(tempdir),
     )
 
-    def fake_run(cmd, check, capture_output, text, timeout=None):
+    def fake_run(cmd, check, capture_output, text):
         assert check is True
         assert capture_output is True
         assert text is True
-        assert timeout is not None
         raise subprocess.CalledProcessError(
             returncode=23,
             cmd=cmd,
@@ -179,7 +178,6 @@ def test_run_mineru_wraps_missing_executable_failure(monkeypatch, tmp_path: Path
         assert check is True
         assert capture_output is True
         assert text is True
-        assert timeout is not None
         raise FileNotFoundError("/opt/private/mineru not found in /Users/private-user/bin")
 
     monkeypatch.setattr(mineru_runner.subprocess, "run", fake_run)
@@ -227,6 +225,7 @@ def test_run_mineru_raises_typed_incomplete_output_error(
         )
 
     monkeypatch.setenv("NEWSDOM_MINERU_BIN", "/opt/mineru")
+    monkeypatch.setattr(mineru_runner.shutil, "which", lambda name: "/usr/bin/mineru")
     monkeypatch.setattr(
         mineru_runner.tempfile,
         "TemporaryDirectory",
