@@ -17,6 +17,8 @@ def test_codeowners_exists_and_covers_repository() -> None:
 
     assert "@Seongho-Bae" in rules["*"]
     assert "@Seongho-Bae" in rules[".github/"]
+    assert "@Seongho-Bae" in rules["docs/"]
+    assert "@Seongho-Bae" in rules["manual/"]
 
 
 def test_codeql_scans_python_and_actions_with_required_check_name() -> None:
@@ -46,3 +48,12 @@ def test_codeql_scans_python_and_actions_with_required_check_name() -> None:
         }
 
     assert normalized_languages == {"python", "actions"}
+
+
+def test_gitignore_declares_site_only_once() -> None:
+    active_lines = [
+        line.strip()
+        for line in Path(".gitignore").read_text(encoding="utf-8").splitlines()
+        if line.strip() and not line.lstrip().startswith("#")
+    ]
+    assert active_lines.count("site/") == 1

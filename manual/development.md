@@ -9,11 +9,13 @@
 일본어 스캔본 신문 데이터는 저작권 등 법적 문제가 얽혀 있을 수 있으므로, **저장소 내부의 픽스처 유지보수에 매우 엄격한 규칙**이 적용됩니다.
 
 ### ✅ 허용되는 항목 (저장소 커밋 가능, `tests/fixtures/` 내)
+
 - **합성된(Synthetic) 더미 PDF 파일** (`synthetic.py` 등 내부 생성기를 통해 만들어진 것만 허용)
 - 파싱 로직 테스트를 위한 **합성(Synthetic) 사이드카 JSON** (`_content_list.json` 등)
 - 텍스트 내용은 모두 제외하고 위치 좌표(BBox)나 구조적 메타데이터만 남은 파생 구조 데이터 (Derived baseline)
 
 ### ❌ 엄격히 금지되는 항목 (절대 커밋 불가)
+
 - 저작권이 있는 실제 원본 신문 PDF 스캔본 파일
 - 실제 참조 문서(Private Reference Page)에서 추출되거나 복사된 OCR 텍스트 전체
 - 원본 스캔본에서 잘라낸 이미지 크롭(Crop) 조각 파일들
@@ -33,6 +35,14 @@
 python tools/derive_private_baseline.py tests/fixtures/private_page_baseline.json
 ```
 
+또는 로컬에서 따로 정리한 **비표현적(redacted) 구조 측정치 JSON** 가 있다면 아래처럼 사용할 수 있습니다:
+
+```bash
+python tools/derive_private_baseline.py --measurements local_measurements.json tests/fixtures/private_page_baseline.json
+```
+
+이 측정치 파일에는 페이지 수, 기사 수, headline 존재 여부, vertical 여부 같은 **구조적 숫자/불리언 데이터만** 들어가야 하며, OCR 원문/파일명/이미지 조각은 포함하면 안 됩니다.
+
 **반드시 원본 데이터가 아닌 이 스크립트를 통해 생성된 파생 JSON 파일만 저장소에 반영(Commit)해야 합니다.**
 
 ---
@@ -42,6 +52,7 @@ python tools/derive_private_baseline.py tests/fixtures/private_page_baseline.jso
 이 프로젝트는 `git-flow init`과 같은 플러그인을 쓰지 않는 수동 **클래식 Git Flow 모델**(`docs/workflow/git-flow.md`)을 강제합니다.
 
 ### 🌿 브랜치 규칙
+
 - **`main` 브랜치**: 안정적인 릴리즈(Stable Release) 전용. 직접 푸시 금지.
 - **`develop` 브랜치**: 모든 새로운 작업의 시작점이자 통합 브랜치.
 - **`feature/<topic>`, `fix/<topic>`, `chore/<topic>`**:
@@ -62,7 +73,7 @@ python tools/derive_private_baseline.py tests/fixtures/private_page_baseline.jso
 
 코드를 탐색하기 위한 핵심 프로젝트 폴더 아키텍처입니다:
 
-- **`src/newsdom_api/`**: 
+- **`src/newsdom_api/`**:
   - `main.py`: FastAPI 서버 및 라우팅 (API 진입점)
   - `schemas.py`: Pydantic 기반 DOM 데이터 직렬화 모델 (`PageNode`, `ArticleNode` 등)
   - `service.py`: 비즈니스 로직. PDF 업로드를 받고 파서를 거쳐 DOM 빌더로 연결

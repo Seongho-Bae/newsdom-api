@@ -52,6 +52,17 @@ def _dependencies_section(text: str) -> str:
     raise AssertionError("pyproject.toml dependencies array is not properly closed")
 
 
+def _project_version(text: str) -> str:
+    match = re.search(
+        r'^\[project\]\n(?:.*\n)*?^version = "([^"]+)"',
+        text,
+        re.MULTILINE,
+    )
+    if match is None:
+        raise AssertionError("pyproject.toml is missing [project].version")
+    return match.group(1)
+
+
 def test_dependencies_section_reports_missing_marker_clearly():
     try:
         _dependencies_section("[project]\nname = 'newsdom-api'\n")
@@ -76,15 +87,22 @@ def test_project_metadata_does_not_bundle_mineru_extra():
     assert "mineru[pipeline]" not in dependencies_section
 
 
-def test_project_version_is_prepared_for_v0_1_1_release():
+def test_project_version_is_prepared_for_v0_2_0_release():
     text = Path("pyproject.toml").read_text(encoding="utf-8")
-    assert 'version = "0.1.1"' in text
+    assert _project_version(text) == "0.2.0"
+
+
+def test_project_version_lookup_uses_project_section_only() -> None:
+    text = (
+        '[tool.example]\nversion = "9.9.9"\n\n'
+        '[project]\nname = "newsdom-api"\nversion = "0.2.0"\n'
+    )
+    assert _project_version(text) == "0.2.0"
 
 
 def test_uv_lock_tracks_project_version() -> None:
     pyproject_text = Path("pyproject.toml").read_text(encoding="utf-8")
-    pyproject_version = re.search(r'^version = "([^"]+)"', pyproject_text, re.MULTILINE)
-    assert pyproject_version is not None
+    pyproject_version = _project_version(pyproject_text)
 
     uv_lock_text = Path("uv.lock").read_text(encoding="utf-8")
     lock_version = re.search(
@@ -92,7 +110,7 @@ def test_uv_lock_tracks_project_version() -> None:
         uv_lock_text,
     )
     assert lock_version is not None
-    assert lock_version.group(1) == pyproject_version.group(1)
+    assert lock_version.group(1) == pyproject_version
 
 
 def test_docs_theme_range_stays_below_warning_release():

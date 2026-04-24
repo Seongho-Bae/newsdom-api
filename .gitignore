@@ -10,8 +10,8 @@ site/
 *.pyc
 private/
 tmp/
-site/
 registered_agents.json
 task_agent_mapping.json
 content_file_3982.pdf
 page1_300dpi-1.png
+.worktrees/
