@@ -128,6 +128,9 @@ def test_build_dom_preserves_multi_page_structure_and_page_scoped_metadata():
 def test_coerce_page_number_returns_none_for_type_and_value_errors():
     assert _coerce_page_number(object()) is None
     assert _coerce_page_number("not-a-page-number") is None
+    assert _coerce_page_number(None) is None
+    assert _coerce_page_number(True) is None
+    assert _coerce_page_number(False) is None
 
 
 def test_caption_nodes_from_items_uses_contents_and_bbox_variants_and_skips_empty_text():

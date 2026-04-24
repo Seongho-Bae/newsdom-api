@@ -69,24 +69,6 @@ def _new_article(article_seq: count, headline: str, bbox: BoundingBox | None = N
     )
 
 
-def _get_or_create_article(
-    page: PageNode,
-    current_articles: dict[int, ArticleNode | None],
-    article_seq: count,
-    *,
-    page_number: int,
-    headline: str = "(untitled)",
-) -> ArticleNode:
-    """Return the current article for a page, creating one when missing."""
-
-    article = current_articles.get(page_number)
-    if article is None:
-        article = _new_article(article_seq, headline)
-        page.articles.append(article)
-        current_articles[page_number] = article
-    return article
-
-
 def _build_page_dom(
     content_list: list[dict[str, Any]],
     *,
