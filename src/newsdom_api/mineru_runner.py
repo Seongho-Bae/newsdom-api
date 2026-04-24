@@ -39,7 +39,13 @@ def _resolve_mineru_bin() -> str:
     configured = os.environ.get("NEWSDOM_MINERU_BIN")
     if configured:
         return configured
-    return shutil.which("mineru") or "mineru"
+    found = shutil.which("mineru")
+    if not found:
+        raise FileNotFoundError(
+            "Could not find 'mineru' executable. "
+            "Ensure it is installed and on the PATH, or set NEWSDOM_MINERU_BIN."
+        )
+    return found
 
 
 def _find_output_dir(base_output_dir: Path) -> Path:
@@ -59,7 +65,15 @@ def run_mineru(input_pdf: Path) -> dict[str, Any]:
         output_dir = Path(tempdir)
         cmd = build_mineru_command(input_pdf, output_dir, mineru_bin=mineru_bin)
         try:
-            completed = subprocess.run(cmd, check=True, capture_output=True, text=True)
+            completed = subprocess.run(
+                cmd, check=True, capture_output=True, text=True, timeout=300
+            )
+        except subprocess.TimeoutExpired as exc:
+            raise MineruRuntimeUnavailableError(
+                returncode=-1,
+                stdout=exc.stdout if exc.stdout else "",
+                stderr="OCR processing timed out after 5 minutes",
+            ) from exc
         except subprocess.CalledProcessError as exc:
             raise MineruRuntimeUnavailableError(
                 returncode=exc.returncode,

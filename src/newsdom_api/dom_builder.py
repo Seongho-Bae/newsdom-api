@@ -11,6 +11,7 @@ from .schemas import (
     CaptionNode,
     ImageNode,
     PageNode,
+    ParseQuality,
     ParseResponse,
 )
 
@@ -144,6 +145,7 @@ def build_dom(
             f"content/model divergence: model page {page_number} has no content_list blocks"
         )
 
+
     for block in content_list:
         block_type = block.get("type")
         text = (block.get("text") or block.get("contents") or "").strip()
@@ -231,5 +233,5 @@ def build_dom(
     return ParseResponse(
         document_id=document_id,
         pages=[pages[page_number] for page_number in sorted(pages)],
-        quality={"warnings": warnings},
+        quality=ParseQuality(warnings=warnings),
     )
