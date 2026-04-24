@@ -140,7 +140,7 @@ def test_run_mineru_wraps_called_process_error(monkeypatch, tmp_path: Path):
         lambda prefix: _FakeTempDir(tempdir),
     )
 
-    def fake_run(cmd, check, capture_output, text):
+    def fake_run(cmd, check, capture_output, text, timeout=None):
         assert check is True
         assert capture_output is True
         assert text is True

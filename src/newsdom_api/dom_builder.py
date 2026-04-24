@@ -99,9 +99,6 @@ def _build_page_dom(
 
     page = PageNode(page_number=page_number, width=width, height=height)
     current_article: ArticleNode | None = None
-    # Provide a dictionary mimicking what _get_or_create_article expects
-    # since _build_page_dom operates on one page at a time.
-    current_articles: dict[int, ArticleNode | None] = {}
 
     for block in content_list:
         block_type = block.get("type")
@@ -109,17 +106,6 @@ def _build_page_dom(
         bbox = _bbox_from_values(block.get("bbox") or block.get("box"))
         text_level = block.get("text_level")
         role = block.get("role")
-        page_number = _coerce_page_number(block.get("page_idx"))
-
-        if page_number is None:
-            if len(page_numbers) != 1:
-                warnings.append(
-                    f"ambiguous page assignment: block type '{block_type or 'unknown'}' missing page_idx"
-                )
-                continue
-            page_number = page_numbers[0]
-
-        page = pages[page_number]
 
         if not text and block_type not in {"image", "table", "chart"}:
             continue
@@ -150,42 +136,31 @@ def _build_page_dom(
             footnote_key = f"{block_type}_footnote"
             image.captions.extend(_caption_nodes_from_items(block.get(caption_key)))
             image.footnotes.extend(_caption_nodes_from_items(block.get(footnote_key)))
-            article = _get_or_create_article(
-                page,
-                current_articles,
-                article_seq,
-                page_number=page_number,
-            )
-            article.images.append(image)
+            if current_article is None:
+                current_article = _new_article(article_seq, "(untitled)")
+                page.articles.append(current_article)
+            current_article.images.append(image)
             continue
 
         if block_type == "table":
-            article = _get_or_create_article(
-                page,
-                current_articles,
-                article_seq,
-                page_number=page_number,
-                headline="(table-block)",
-            )
-            article.body_blocks.append(block.get("table_body", ""))
-            article.captions.extend(_caption_nodes_from_items(block.get("table_caption")))
-            article.footnotes.extend(_caption_nodes_from_items(block.get("table_footnote")))
+            if current_article is None:
+                current_article = _new_article(article_seq, "(table-block)")
+                page.articles.append(current_article)
+            current_article.body_blocks.append(block.get("table_body", ""))
+            current_article.captions.extend(_caption_nodes_from_items(block.get("table_caption")))
+            current_article.footnotes.extend(_caption_nodes_from_items(block.get("table_footnote")))
             continue
 
         is_headline = bool(text_level == 1 or role == "section_headings")
         if is_headline:
-            article = _new_article(article_seq, text.replace("\n", " "), bbox)
-            page.articles.append(article)
-            current_articles[page_number] = article
+            current_article = _new_article(article_seq, text.replace("\n", " "), bbox)
+            page.articles.append(current_article)
             continue
 
-        article = _get_or_create_article(
-            page,
-            current_articles,
-            article_seq,
-            page_number=page_number,
-        )
-        article.body_blocks.append(text.replace("\n", " "))
+        if current_article is None:
+            current_article = _new_article(article_seq, "(untitled)")
+            page.articles.append(current_article)
+        current_article.body_blocks.append(text.replace("\n", " "))
 
     return page
 

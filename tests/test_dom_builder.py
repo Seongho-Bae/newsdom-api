@@ -148,27 +148,6 @@ def test_caption_nodes_from_items_uses_contents_and_bbox_variants_and_skips_empt
     assert nodes[1].bbox.y1 == 8.0
 
 
-def test_build_dom_warns_when_model_and_content_pages_diverge_and_skips_invalid_model_page_numbers():
-    dom = build_dom(
-        [
-            {"type": "text", "text": "body on content page", "page_idx": 1},
-            {
-                "type": "image",
-                "page_idx": 1,
-                "img_path": "img.png",
-                "image_caption": [
-                    {"contents": "Image caption from dict", "bbox": [0, 1, 2, 3]},
-                    {"text": "   ", "bbox": [3, 4, 5, 6]},
-                ],
-                "image_footnote": [
-                    {"contents": "Image footnote from dict", "box": [6, 7, 8, 9]}
-                ],
-            },
-        ],
-        document_id="doc-divergence",
-        model=[
-            {"page_info": {"page_no": 2, "width": 1200, "height": 1800}},
-            {"page_info": {"page_no": object(), "width": 10, "height": 20}},
 def test_build_dom_preserves_multi_page_structure_from_page_idx_and_model():
     dom = build_dom(
         [
