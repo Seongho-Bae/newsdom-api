@@ -54,9 +54,6 @@ include = ["newsdom_api*", "tools*"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 asyncio_default_fixture_loop_scope = "function"
-filterwarnings = [
-    "ignore:the load_module\\(\\) method is deprecated:DeprecationWarning"
-]
 markers = [
   "integration: requires MinerU CLI and model cache"
 ]
