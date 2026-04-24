@@ -29,16 +29,16 @@ dev = [
   "pyyaml>=6.0,<7.0",
 ]
 mineru = [
-  "mineru[pipeline]==3.0.9",
+  "mineru[pipeline]==3.1.3",
   "transformers>=4.48.0",
 ]
 docs = [
     "mkdocs>=1.6,<2.0",
-    "mkdocs-material>=9.6,<9.7",
+    "mkdocs-material>=9.6,<9.8",
 ]
 fuzz = [
   "atheris==3.0.0 ; platform_system == 'Linux' and python_version >= '3.11'",
-  "pyinstaller==6.16.0",
+  "pyinstaller==6.20.0",
 ]
 
 [project.scripts]
