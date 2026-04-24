@@ -7,30 +7,28 @@ on:
 
 permissions:
   contents: read
+  packages: read
 
 jobs:
   pytest:
     runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/seongho-bae/newsdom-api/ci-env:latest
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
     env:
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
     steps:
       - name: Checkout
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        uses: actions/checkout@v4
 
-      - name: Setup Python
-        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405
-        with:
-          python-version: '3.10'
-
-      - name: Setup uv
-        uses: astral-sh/setup-uv@cec208311dfd045dd5311c1add060b2062131d57
-        with:
-          version: '0.11.3'
-
-      - name: Install dependencies
-        run: uv sync --frozen --all-extras
+      # Reinstall the current code using uv, as the prebuilt image has an older version
+      - name: Install current workspace
+        run: uv pip install --system -e ".[dev,test]"
 
       - name: Run tests with warnings as errors
         env:
           PYTHONWARNINGS: error
-        run: uv run pytest
+          PYTHONPATH: src
+        run: pytest

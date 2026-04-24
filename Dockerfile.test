@@ -1,0 +1,33 @@
+FROM python:3.10-slim
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    libgl1 \
+    libglib2.0-0 \
+    curl \
+    git \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install uv
+RUN curl -LsSf https://astral.sh/uv/install.sh | sh
+ENV PATH="/root/.local/bin:${PATH}"
+
+WORKDIR /app
+
+# Copy project files
+COPY pyproject.toml .
+COPY README.md .
+COPY src/ ./src/
+COPY tests/ ./tests/
+COPY tools/ ./tools/
+
+# Install dependencies using uv (including mineru and test extras)
+# We use system environment for the container
+RUN uv pip install --system -e ".[dev,test]"
+
+# Set PYTHONPATH
+ENV PYTHONPATH=/app/src
+
+# Default command
+CMD ["pytest"]
