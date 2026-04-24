@@ -1,0 +1,3 @@
+# A minimal Dockerfile to test the basic build process in CI.
+FROM python:3.10-slim
+RUN echo "Minimal CI test build successful."
