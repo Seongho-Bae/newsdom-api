@@ -222,8 +222,8 @@ def build_dom(
 
     blocks_by_page_idx: dict[int, list[dict[str, Any]]] = {}
     for block in content_list:
-        page_idx = block.get("page_idx")
-        normalized_page_idx = page_idx if isinstance(page_idx, int) else 0
+        raw_page_idx = block.get("page_idx")
+        normalized_page_idx = raw_page_idx if isinstance(raw_page_idx, int) else 0
         blocks_by_page_idx.setdefault(normalized_page_idx, []).append(block)
 
     pages = []
