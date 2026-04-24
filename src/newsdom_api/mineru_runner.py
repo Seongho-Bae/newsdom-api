@@ -10,7 +10,7 @@ import tempfile
 from pathlib import Path
 from typing import Any
 
-from fastapi import HTTPException
+from .errors import MineruIncompleteOutputError, MineruRuntimeUnavailableError
 
 
 def build_mineru_command(
@@ -53,7 +53,7 @@ def _find_output_dir(base_output_dir: Path) -> Path:
 
     candidates = list(base_output_dir.glob("*/ocr"))
     if not candidates:
-        raise FileNotFoundError(f"No MinerU OCR output found under {base_output_dir}")
+        raise FileNotFoundError("MinerU OCR output directory was not produced")
     return candidates[0]
 
 
@@ -68,29 +68,41 @@ def run_mineru(input_pdf: Path) -> dict[str, Any]:
             completed = subprocess.run(
                 cmd, check=True, capture_output=True, text=True, timeout=300
             )
-        except subprocess.TimeoutExpired as e:
-            raise HTTPException(
-                status_code=504, detail="OCR processing timed out after 5 minutes"
-            ) from e
-        except subprocess.CalledProcessError as e:
-            raise HTTPException(
-                status_code=500,
-                detail=f"MinerU OCR process failed: {e.stderr}",
-            ) from e
-
-        ocr_dir = _find_output_dir(output_dir)
-        content_path = ocr_dir / f"{input_pdf.stem}_content_list.json"
-        if not content_path.exists():
-            json_candidates = sorted(ocr_dir.glob("*_content_list.json"))
-            if not json_candidates:
-                raise FileNotFoundError("MinerU content list JSON was not produced")
-            content_path = json_candidates[0]
-        model_candidates = sorted(ocr_dir.glob("*_model.json"))
-        if not model_candidates:
-            raise FileNotFoundError("MinerU model JSON was not produced")
+        except subprocess.TimeoutExpired as exc:
+            raise MineruRuntimeUnavailableError(
+                returncode=-1,
+                stdout=exc.stdout if exc.stdout else "",
+                stderr="OCR processing timed out after 5 minutes",
+            ) from exc
+        except subprocess.CalledProcessError as exc:
+            raise MineruRuntimeUnavailableError(
+                returncode=exc.returncode,
+                stdout=exc.output,
+                stderr=exc.stderr,
+            ) from exc
+        except FileNotFoundError as exc:
+            raise MineruRuntimeUnavailableError() from exc
+        try:
+            ocr_dir = _find_output_dir(output_dir)
+            content_path = ocr_dir / f"{input_pdf.stem}_content_list.json"
+            if not content_path.exists():
+                json_candidates = sorted(ocr_dir.glob("*_content_list.json"))
+                if not json_candidates:
+                    raise FileNotFoundError("MinerU content list JSON was not produced")
+                content_path = json_candidates[0]
+            model_candidates = sorted(ocr_dir.glob("*_model.json"))
+            if not model_candidates:
+                raise FileNotFoundError("MinerU model JSON was not produced")
+        except FileNotFoundError as exc:
+            raise MineruIncompleteOutputError() from exc
+        try:
+            content_list = json.loads(content_path.read_text(encoding="utf-8"))
+            model = json.loads(model_candidates[0].read_text(encoding="utf-8"))
+        except json.JSONDecodeError as exc:
+            raise MineruIncompleteOutputError() from exc
         return {
-            "content_list": json.loads(content_path.read_text(encoding="utf-8")),
-            "model": json.loads(model_candidates[0].read_text(encoding="utf-8")),
+            "content_list": content_list,
+            "model": model,
             "stdout": completed.stdout,
             "stderr": completed.stderr,
         }
