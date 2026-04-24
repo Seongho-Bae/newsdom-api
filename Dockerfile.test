@@ -1,0 +1,36 @@
+FROM python:3.10-slim
+
+ENV UV_VERSION=0.11.3
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    libgl1 \
+    libglib2.0-0 \
+    curl \
+    git \
+    && rm -rf /var/lib/apt/lists/* \
+    && useradd -m -s /bin/bash ciuser
+
+# Install uv (pin to match .github/workflows/tests.yml)
+RUN curl -LsSf https://astral.sh/uv/install.sh | env UV_INSTALL_DIR=/usr/local/bin sh
+
+ENV PATH="/usr/local/bin:${PATH}"
+
+WORKDIR /app
+
+# Pre-warm dependencies only (source is mounted at runtime by Actions)
+COPY pyproject.toml README.md ./
+COPY src/newsdom_api/__init__.py ./src/newsdom_api/__init__.py
+
+# Install dependencies using uv
+# Install to system Python so that it's accessible without activating a venv
+RUN uv pip install --system -e ".[dev,mineru]"
+
+# Now set permissions and switch to non-root user
+RUN chown -R ciuser:ciuser /app
+USER ciuser
+
+ENV PYTHONPATH=/app/src
+
+CMD ["pytest"]
