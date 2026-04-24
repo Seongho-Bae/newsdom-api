@@ -12,29 +12,23 @@ permissions:
 jobs:
   pytest:
     runs-on: ubuntu-latest
-    # We hardcode the lowercase owner because container.image does not support string manipulation like lowercasing,
-    # and github.repository_owner (Seongho-Bae) contains uppercase letters which violates Docker image naming rules.
-    # @coderabbitai ignore
-    container:
-      image: ghcr.io/seongho-bae/newsdom-api/ci-env:latest
-      credentials:
-        username: ${{ github.actor }}
-        password: ${{ secrets.GITHUB_TOKEN }}
     env:
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
     steps:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
 
-      # This setup step is kept to satisfy test_tests_workflow_pins_uv_version check.
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
       - name: Setup uv
         uses: astral-sh/setup-uv@cec208311dfd045dd5311c1add060b2062131d57
         with:
           version: '0.11.3'
 
-      # We must sync dependencies at runtime because the container image only contains pre-warmed packages
-      # and does NOT contain the source code or local project metadata, since Actions bind-mounts the workspace.
-      - name: Install current workspace dependencies
+      - name: Install dependencies
         run: uv sync --frozen --all-extras
 
       - name: Run tests with coverage
