@@ -78,6 +78,7 @@ def test_parse_endpoint_returns_502_for_incomplete_mineru_output(
         "TemporaryDirectory",
         lambda prefix: _FakeTempDir(tempdir),
     )
+    monkeypatch.setenv("NEWSDOM_MINERU_BIN", "/opt/mineru")
 
     def fake_run(cmd, check, capture_output, text, timeout=None):
         assert check is True

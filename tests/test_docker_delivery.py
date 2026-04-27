@@ -89,7 +89,7 @@ def test_dockerfile_runs_uvicorn_with_external_mineru_path():
     text = Path("Dockerfile").read_text(encoding="utf-8")
     assert "uvicorn" in text
     assert "newsdom_api.main:app" in text
-    assert "NEWSDOM_MINERU_BIN" in text
+    assert "NEWSDOM_MINERU_BIN" not in text
     assert "--host" in text
     assert "0.0.0.0" in text
     assert "8000" in text
@@ -102,6 +102,17 @@ def test_nvidia_dockerfile_installs_mineru_pipeline_stack():
     assert "ghcr.io/astral-sh/uv@sha256:" in text
     assert 'uv pip install --python .venv/bin/python "mineru[pipeline]==3.0.9"' in text
     assert "NEWSDOM_MINERU_BIN" in text
+
+
+def test_ci_dockerfile_pins_python_base_image_by_digest():
+    text = Path("Dockerfile.test").read_text(encoding="utf-8")
+    assert re.search(r"^FROM python:3\.10-slim@sha256:[0-9a-f]{64}$", text, re.M)
+
+
+def test_ci_dockerfile_avoids_installing_live_mineru_stack():
+    text = Path("Dockerfile.test").read_text(encoding="utf-8")
+    assert 'uv pip install --system -e ".[dev]"' in text
+    assert 'uv pip install --system -e ".[dev,mineru]"' not in text
 
 
 def test_dockerignore_excludes_local_noise():
@@ -130,13 +141,21 @@ def test_readme_documents_docker_build_and_run():
     assert "NVIDIA" in text
 
 
-def test_readme_describes_default_image_as_shipping_mineru_runtime() -> None:
+def test_default_dockerfile_installs_mineru_optional_extra_from_lockfile() -> None:
+    text = Path("Dockerfile").read_text(encoding="utf-8")
+
+    assert "uv sync --frozen --no-dev" in text
+    assert "--extra mineru" not in text
+    assert "uv pip install --python .venv/bin/python \"mineru[pipeline]==3.0.9\"" not in text
+
+
+def test_readme_describes_default_image_as_api_only_runtime() -> None:
     text = Path("README.md").read_text(encoding="utf-8")
 
-    assert "NEWSDOM_MINERU_BIN=mineru" in text
-    assert "includes the MinerU runtime" in text
-    assert "real `/parse` execution" not in text
-    assert "requires a compatible MinerU runtime to be available inside the container image" not in text
+    assert "default image ships the API service only" in text
+    assert "does not bundle the MinerU runtime" in text
+    assert "NEWSDOM_MINERU_BIN=mineru" not in text
+    assert "requires a compatible MinerU runtime to be available inside the container image" in text
 
 
 def test_docker_command_matchers_allow_wrapped_whitespace():

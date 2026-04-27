@@ -61,6 +61,13 @@ def test_installation_doc_uses_quoted_extras_and_clear_python_wording():
     assert 'pip install "mineru[pipeline]==3.0.9"' in text
 
 
+def test_installation_doc_marks_mineru_pipeline_install_as_optional():
+    text = Path("manual/installation.md").read_text(encoding="utf-8")
+
+    assert "별도로 설치" in text
+    assert "선택" in text or "옵션" in text
+
+
 def test_installation_doc_includes_manual_api_healthcheck_commands():
     text = Path("manual/installation.md").read_text(encoding="utf-8")
     for token in [

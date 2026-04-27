@@ -57,28 +57,36 @@ def _find_output_dir(base_output_dir: Path) -> Path:
     return candidates[0]
 
 
+def _normalize_process_text(value: str | bytes | None) -> str:
+    """Return subprocess text fields as sanitized strings for typed errors."""
+
+    if isinstance(value, bytes):
+        return value.decode("utf-8", errors="replace")
+    return value or ""
+
+
 def run_mineru(input_pdf: Path) -> dict[str, Any]:
     """Run MinerU on a PDF and return parsed JSON artifacts plus raw process output."""
 
-    mineru_bin = _resolve_mineru_bin()
     with tempfile.TemporaryDirectory(prefix="newsdom-mineru-") as tempdir:
         output_dir = Path(tempdir)
-        cmd = build_mineru_command(input_pdf, output_dir, mineru_bin=mineru_bin)
         try:
+            mineru_bin = _resolve_mineru_bin()
+            cmd = build_mineru_command(input_pdf, output_dir, mineru_bin=mineru_bin)
             completed = subprocess.run(
                 cmd, check=True, capture_output=True, text=True, timeout=300
             )
         except subprocess.TimeoutExpired as exc:
             raise MineruRuntimeUnavailableError(
                 returncode=-1,
-                stdout=exc.stdout if exc.stdout else "",
+                stdout=_normalize_process_text(exc.stdout),
                 stderr="OCR processing timed out after 5 minutes",
             ) from exc
         except subprocess.CalledProcessError as exc:
             raise MineruRuntimeUnavailableError(
                 returncode=exc.returncode,
-                stdout=exc.output,
-                stderr=exc.stderr,
+                stdout=_normalize_process_text(exc.output),
+                stderr=_normalize_process_text(exc.stderr),
             ) from exc
         except FileNotFoundError as exc:
             raise MineruRuntimeUnavailableError() from exc

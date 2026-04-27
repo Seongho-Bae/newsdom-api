@@ -38,7 +38,7 @@ pip install -e ".[dev]"
 
 ## 2. MinerU 백엔드 포함 실제 파싱 모드 설치
 
-`MinerU` 백엔드를 사용하여 실제 스캔된 일본어 신문 PDF 파싱 작업을 수행하려면 MinerU CLI를 별도로 설치해야 합니다.
+`MinerU` 백엔드를 사용하여 실제 스캔된 일본어 신문 PDF 파싱 작업을 수행하려면 MinerU CLI를 별도로 설치해야 합니다. 이 단계는 선택 사항이며, 실 OCR 실행이 필요할 때만 진행하면 됩니다.
 
 ```bash
 # MinerU 파이프라인 CLI 설치

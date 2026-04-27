@@ -143,9 +143,9 @@ def test_deploy_runbook_describes_current_runtime_and_probe_contract() -> None:
     text = Path("docs/operations/deploy-runbook.md").read_text(encoding="utf-8")
 
     for expected in (
-        "default image already includes the MinerU runtime",
-        "`NEWSDOM_MINERU_BIN=mineru`",
-        "`/health` proves the API process is serving but does not validate a full `/parse` round-trip",
+        "Container smoke should validate `/health` by default",
+        "Real `/parse` checks require a container image or runtime variant that includes MinerU",
+        "`/health` proves the API process is serving but does not validate a full `/parse` round-trip, MinerU execution, or OCR artifact production.",
         "no in-tree Kubernetes manifests",
     ):
         assert expected in text
