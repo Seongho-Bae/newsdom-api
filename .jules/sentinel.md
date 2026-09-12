@@ -90,3 +90,8 @@
 **Vulnerability:** The `_safe_upload_filename` function used `filename.replace`, `PurePosixPath`, and `re.sub` on unbounded client input, making it vulnerable to ReDoS or CPU/memory exhaustion (DoS) when fed extremely long strings.
 **Learning:** Even fast standard library functions like `PurePosixPath` and string replacements can cause significant lag when chained on strings in the megabytes. String processing operations should always bound their inputs first if the input is untrusted and can be arbitrarily large.
 **Prevention:** Cap the length of client-provided filename strings early by slicing them (e.g. `filename = filename[-512:]`) before doing more complex string parsing or regex replacements, especially when only the basename suffix is relevant.
+
+## 2026-09-12 - Limit Multipart Parsing Limits
+**Vulnerability:** FastAPI endpoints using `python-multipart` buffer fields up to Starlette's `MultiPartParser.max_part_size`.
+**Learning:** `max_part_size` defaults to 1MB, potentially causing unbounded buffering if overridden improperly. Modifying `starlette.formparsers.MultiPartParser.max_part_size` manually applies a global limit on memory consumption during parsing.
+**Prevention:** Bound multipart upload sizing by explicitly asserting constraints on the memory parser like `max_part_size`.
