@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### 보안 (Security)
+- 인증 토큰 길이 유출을 방지하기 위해 API 토큰 비교 로직에 길이를 숨기는 타이밍 공격 완화(length-hiding constant-time comparison)를 추가했습니다.
+
 > **Planned 0.3.0 deployment migration:** parser authentication changes from
 > **default-open** to **default-required**. Production must configure
 > `NEWSDOM_AUTH_MODE=required`, `NEWSDOM_RUNTIME_PROFILE=production`, and
