@@ -95,3 +95,8 @@
 **Vulnerability:** FastAPI endpoints using `python-multipart` buffer fields up to Starlette's `MultiPartParser.max_part_size`.
 **Learning:** `max_part_size` defaults to 1MB, potentially causing unbounded buffering if overridden improperly. Modifying `starlette.formparsers.MultiPartParser.max_part_size` manually applies a global limit on memory consumption during parsing.
 **Prevention:** Bound multipart upload sizing by explicitly asserting constraints on the memory parser like `max_part_size`.
+
+## 2026-09-12 - Trivy Security Upgrades
+**Vulnerability:** Known CVEs inside dependencies (CVE-2026-84381 inside httpcore2, CVE-2026-84382 inside httpx2, CVE-2026-84309 inside pypdf) triggered Trivy vulnerability checks.
+**Learning:** We must bump dependency versions to address failing `trivy-fs` CI checks, adjusting both `pyproject.toml` and associated tests enforcing strict security floors (`test_pypdf_security_floor.py`, `test_project_metadata.py`).
+**Prevention:** Routinely monitor dependabot upgrades and address explicit CVE flags by updating the package specification inside `pyproject.toml` and `uv.lock`.
