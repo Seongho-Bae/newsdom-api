@@ -100,3 +100,8 @@
 **Vulnerability:** Known CVEs inside dependencies (CVE-2026-84381 inside httpcore2, CVE-2026-84382 inside httpx2, CVE-2026-84309 inside pypdf) triggered Trivy vulnerability checks.
 **Learning:** We must bump dependency versions to address failing `trivy-fs` CI checks, adjusting both `pyproject.toml` and associated tests enforcing strict security floors (`test_pypdf_security_floor.py`, `test_project_metadata.py`).
 **Prevention:** Routinely monitor dependabot upgrades and address explicit CVE flags by updating the package specification inside `pyproject.toml` and `uv.lock`.
+
+## 2026-09-12 - Re-trigger LLM orchestration failures
+**Vulnerability:** External strix checks can fail due to AI rate limits or infrastructure hiccups with `502 Bad Gateway`.
+**Learning:** If the Strix or Noema CI checks fail with an LLM connection, timeout, parsing error, or internal compatibility error, it indicates a transient provider infrastructure issue rather than a code defect.
+**Prevention:** Re-trigger the CI run by making an empty or amended commit.
