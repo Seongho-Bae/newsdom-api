@@ -90,3 +90,18 @@
 **Vulnerability:** The `_safe_upload_filename` function used `filename.replace`, `PurePosixPath`, and `re.sub` on unbounded client input, making it vulnerable to ReDoS or CPU/memory exhaustion (DoS) when fed extremely long strings.
 **Learning:** Even fast standard library functions like `PurePosixPath` and string replacements can cause significant lag when chained on strings in the megabytes. String processing operations should always bound their inputs first if the input is untrusted and can be arbitrarily large.
 **Prevention:** Cap the length of client-provided filename strings early by slicing them (e.g. `filename = filename[-512:]`) before doing more complex string parsing or regex replacements, especially when only the basename suffix is relevant.
+
+## 2026-09-12 - Limit Multipart Parsing Limits
+**Vulnerability:** FastAPI endpoints using `python-multipart` buffer fields up to Starlette's `MultiPartParser.max_part_size`.
+**Learning:** `max_part_size` defaults to 1MB, potentially causing unbounded buffering if overridden improperly. Modifying `starlette.formparsers.MultiPartParser.max_part_size` manually applies a global limit on memory consumption during parsing.
+**Prevention:** Bound multipart upload sizing by explicitly asserting constraints on the memory parser like `max_part_size`.
+
+## 2026-09-12 - Trivy Security Upgrades
+**Vulnerability:** Known CVEs inside dependencies (CVE-2026-84381 inside httpcore2, CVE-2026-84382 inside httpx2, CVE-2026-84309 inside pypdf) triggered Trivy vulnerability checks.
+**Learning:** We must bump dependency versions to address failing `trivy-fs` CI checks, adjusting both `pyproject.toml` and associated tests enforcing strict security floors (`test_pypdf_security_floor.py`, `test_project_metadata.py`).
+**Prevention:** Routinely monitor dependabot upgrades and address explicit CVE flags by updating the package specification inside `pyproject.toml` and `uv.lock`.
+
+## 2026-09-12 - Re-trigger LLM orchestration failures
+**Vulnerability:** External strix checks can fail due to AI rate limits or infrastructure hiccups with `502 Bad Gateway`.
+**Learning:** If the Strix or Noema CI checks fail with an LLM connection, timeout, parsing error, or internal compatibility error, it indicates a transient provider infrastructure issue rather than a code defect.
+**Prevention:** Re-trigger the CI run by making an empty or amended commit.

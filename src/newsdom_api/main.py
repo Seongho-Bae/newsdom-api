@@ -6,6 +6,7 @@ import asyncio
 import hmac
 import logging
 import tempfile
+import starlette.formparsers
 from pathlib import Path
 from typing import Annotated, Callable
 
@@ -42,6 +43,7 @@ from .schemas import HealthResponse, ParseResponse, ReadinessResponse
 from .service import parse_pdf
 
 MAX_PARSE_UPLOAD_BYTES = 20 * 1024 * 1024
+starlette.formparsers.MultiPartParser.max_part_size = MAX_PARSE_UPLOAD_BYTES
 MAX_AUTHORIZATION_HEADER_BYTES = MAX_BEARER_HEADER_BYTES
 UNSUPPORTED_MEDIA_DETAIL = "Unsupported Media Type"
 PAYLOAD_TOO_LARGE_DETAIL = "Payload Too Large"

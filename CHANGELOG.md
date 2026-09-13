@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Security
+- Multipart form parsing 시 악의적인 메모리 고갈(DoS) 공격을 방지하기 위해 `starlette.formparsers.MultiPartParser.max_part_size` 제한을 추가했습니다.
+
 > **Planned 0.3.0 deployment migration:** parser authentication changes from
 > **default-open** to **default-required**. Production must configure
 > `NEWSDOM_AUTH_MODE=required`, `NEWSDOM_RUNTIME_PROFILE=production`, and
